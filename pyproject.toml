@@ -1,0 +1,29 @@
+[project]
+name = "gigachat-cli"
+version = "0.1.0"
+description = "GigaChat CLI utility"
+authors = [
+    {name = "THEChrismoth",email = "klevindanila@ya.ru"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "asyncio>=4.0.0",
+    "gigachat>=0.1.42.post2",
+    "rich>=14.1.0",
+    "typer>=0.17.4",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Utilities",
+    "Topic :: Terminals",
+]
+
+[project.scripts]
+gigachat = "gigachat_cli.__main__:app"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
