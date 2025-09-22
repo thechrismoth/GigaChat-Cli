@@ -1,37 +1,43 @@
 import typer
-import os
 
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.console import Console
+from rich.prompt import Prompt
 
-from .core import get_answer, draw_menu
+from .core import get_answer
+from .interfaces import draw_interface
 
+console = Console()
 app = typer.Typer()
 
 @app.command()
 def chat():
-    draw_menu()
+    chat_history = []
 
     while True:
-        user_input = typer.prompt("Вы")
+        draw_interface(chat_history)
+        user_input = Prompt.ask("> ")
         
         if user_input.lower() in ['quit', 'exit', 'q']:
             typer.echo("До свидания!")
             break
         
+        chat_history.append(f"[bold blue]Вы:[/bold blue]")
+
         try:
             with Progress(
                 SpinnerColumn(),
                 TextColumn("[progress.description]{task.description}"),
                 transient=True,
             ) as progress:
-                progress.add_task(description="Processing...", total=None)
+                progress.add_task(description="Ожидаем ответ...", total=None)
                 result = get_answer(user_input) 
-
-            response = f"GigaChat: {result}"
-            typer.echo(response) 
+            
+            chat_history.append(f"[bold green]GigaChat:[/bold green]{result}")
+            if len(chat_history) > 10:
+                chat_history = chat_history[-10:]
+             
         except Exception as e:
             typer.secho(f"Чат завершил ! свою работу с ошибкой {e}", fg=typer.colors.RED, err=True)
             raise typer.Exit(code=1)
-
-    dir = os.path.abspath(os.curdir)
-    typer.echo(dir)
+    
