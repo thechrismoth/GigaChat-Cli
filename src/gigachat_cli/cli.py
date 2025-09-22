@@ -16,7 +16,7 @@ def chat():
 
     while True:
         draw_interface(chat_history)
-        user_input = Prompt.ask("> ")
+        user_input = typer.prompt("Ввод ")
         
         if user_input.lower() in ['quit', 'exit', 'q']:
             typer.echo("До свидания!")
