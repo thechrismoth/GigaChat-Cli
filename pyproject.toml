@@ -9,7 +9,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "asyncio>=4.0.0",
-    "gigachat>=0.1.42.post2",
+    "langchain-gigachat>=0.3.12",
     "rich>=14.1.0",
     "typer>=0.17.4",
 ]
