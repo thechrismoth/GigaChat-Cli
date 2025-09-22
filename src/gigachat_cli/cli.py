@@ -22,7 +22,7 @@ def chat():
             typer.echo("До свидания!")
             break
         
-        chat_history.append(f"[bold blue]Вы:[/bold blue]")
+        chat_history.append(f"[bold blue]Вы:[/bold blue]{user_input}")
 
         try:
             with Progress(
