@@ -33,6 +33,6 @@ gigachat
 #### Запустите в конкретной дирректории 
 
 ```
-gemini
+gigachat
 ```
 [![asciicast](https://asciinema.org/a/WYc8dwBc6mrx7xOzV20reH5NB.svg)](https://asciinema.org/a/WYc8dwBc6mrx7xOzV20reH5NB)
