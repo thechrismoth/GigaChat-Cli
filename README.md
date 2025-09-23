@@ -1,5 +1,5 @@
 # GiaChat CLI
-![GigaChat CLI Screenshot](https://gitverse.ru/api/repos/THEChrismoth/GigaChat_Cli/raw/branch/asset/gigachat-screenshot.jpg)
+![GigaChat CLI Screenshot](https://gitverse.ru/api/repos/THEChrismoth/GigaChat-Cli/raw/branch/asset/gigachat-screenshot.jpg)
 
 GiaChat CLI — это AI-агент с открытым исходным кодом, который позволит вам использовать возможности GiaChat прямо в вашем терминале. Он обеспечивает лёгкий доступ к GiaChat, предоставляя вам самый прямой путь от вашего запроса к нашей модели.
 
