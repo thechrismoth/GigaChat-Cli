@@ -1,4 +1,8 @@
-from gigachat_cli.cli import app
+from gigachat_cli.main import Main
+
+def main():
+    app = Main()
+    app.run()
 
 if __name__ == "__main__":
-    app()
+    main()
