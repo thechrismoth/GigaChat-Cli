@@ -2,7 +2,7 @@ import importlib.resources
 import asyncio
 
 from textual.app import ComposeResult
-from textual.widgets import Input, Static
+from textual.widgets import Input, Static, Markdown
 from textual.screen import Screen
 from textual.containers import VerticalScroll
 
@@ -17,7 +17,7 @@ class ChatScreen(Screen):
     def compose(self) -> ComposeResult:
         yield Banner(classes="banner")
         with VerticalScroll(id="chat_container"):
-            yield Static("", id="chat_display")
+            yield Markdown("", id="chat_display")
         yield Input(placeholder="Введите сообщение и нажмите Enter", id="message_input")
         yield Dir(classes="dir")
     
@@ -39,12 +39,8 @@ class ChatScreen(Screen):
         # Добавляем сообщение пользователя
         self.user_inputs.append(("Вы", user_text))
         
-        # Обновляем отображение
-        output_lines = []
-        for sender, text in self.user_inputs:
-            output_lines.append(f"{sender}: {text}")
-        output = "\n".join(output_lines)
-        self.query_one("#chat_display", Static).update(output)
+        # Обновляем отображение с Markdown
+        self.update_chat_display()
         
         # Показываем индикатор набора
         self.current_typing_indicator = TypingIndicator()
@@ -56,7 +52,22 @@ class ChatScreen(Screen):
         
         event.input.value = ""
     
-    #получаем ответ от API
+    def update_chat_display(self) -> None:
+
+        output_lines = []
+        for sender, text in self.user_inputs:
+            if sender == "Вы":
+                output_lines.append(f"**{sender}:** {text}")
+            else:
+                # Ответы от нейросети будут отформатированы как Markdown
+                output_lines.append(f"**{sender}:**\n\n{text}")
+        
+        output = "\n\n".join(output_lines)
+        
+        # Обновляем Markdown виджет
+        chat_display = self.query_one("#chat_display", Markdown)
+        chat_display.update(output)
+    
     async def get_bot_response(self, user_text: str) -> None:
         try:
             # Получаем ответ от бота
@@ -76,27 +87,16 @@ class ChatScreen(Screen):
                 self.user_inputs = self.user_inputs[-10:]
             
             # Обновляем отображение
-            output_lines = []
-            for sender, text in self.user_inputs:
-                output_lines.append(f"{sender}: {text}")
-            output = "\n".join(output_lines)
-            self.query_one("#chat_display", Static).update(output)
+            self.update_chat_display()
             
         except Exception as e:
-            # В случае ошибки тоже убираем индикатор
             if self.current_typing_indicator:
                 self.current_typing_indicator.stop_animation()
                 self.current_typing_indicator.remove()
                 self.current_typing_indicator = None
-            self.user_inputs.append(("GigaChat", f"Ошибка: {str(e)}"))
-            
-            output_lines = []
-            for sender, text in self.user_inputs:
-                output_lines.append(f"{sender}: {text}")
-            output = "\n".join(output_lines)
-            self.query_one("#chat_display", Static).update(output)
+            self.user_inputs.append(("GigaChat", f"**Ошибка:** {str(e)}"))
+            self.update_chat_display()
     
-    #очищаем при завершении
     def on_unmount(self) -> None:
         if self.current_typing_indicator:
             self.current_typing_indicator.stop_animation()
