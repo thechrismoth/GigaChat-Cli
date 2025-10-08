@@ -11,8 +11,6 @@ dependencies = [
     "asyncio>=4.0.0",
     "importlib-resources>=6.5.2",
     "langchain-gigachat>=0.3.12",
-    "langgraph>=0.6.9",
-    "questionary>=2.1.1",
     "textual>=6.2.0",
 ]
 classifiers = [
