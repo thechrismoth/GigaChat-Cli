@@ -9,14 +9,15 @@
 }
 
 .typing-indicator {
-    color: $warning;
-    text-style: italic;
-    height: auto;
-    margin: 1 0;
+  color: $warning;
+  text-style: italic;
+  height: auto;
+  margin: 1 0;
 }
 
 #message_input {
-    border: none !important;
-    background: transparent !important;
-    outline: none !important;
+  border: none !important;
+  background: transparent !important;
+  outline: none !important;
+  height: 4;
 }
