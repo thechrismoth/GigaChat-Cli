@@ -24,6 +24,16 @@ class ChatScreen(Screen):
             id="message_input"
         )
         yield Dir(classes="dir")
+
+    def on_paste(self, event: events.Paste) -> None:
+        """Обработчик вставки из буфера обмена"""
+        text_area = self.query_one("#message_input", TextArea)
+        
+        # Вставляем текст в текущую позицию курсора
+        if event.text:
+            text_area.insert(event.text)
+        
+        event.prevent_default()
     
     def on_mount(self) -> None:
         self.user_inputs = [] 

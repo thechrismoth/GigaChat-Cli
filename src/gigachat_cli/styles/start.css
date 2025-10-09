@@ -1,4 +1,3 @@
-/* Главный контейнер по центру экрана */
 .main-container {
     align: center middle;
     width: 100%;
@@ -14,59 +13,52 @@ Banner {
   margin-bottom: 2;
 }
 
-/* Контейнер кнопок - растягиваем по ширине и центрируем содержимое */
 .buttons-container {
-    align: center middle;
-    width: 100%;
-    height: auto;
-    background: transparent;
+  align: center middle;
+  width: 100%;
+  height: auto;
+  background: transparent;
 }
 
-/* ListView с кнопками - центрируем внутри контейнера */
 .menu-list {
-    background: transparent;
-    border: none;
-    width: auto;
-    height: auto;
-    min-width: 35;
-    align: center middle;
+  background: transparent;
+  border: none;
+  width: auto;
+  height: auto;
+  min-width: 35;
+  align: center middle;
 }
 
-/* Кнопки меню */
 .menu-button {
-    background: transparent;
-    border: none;
-    height: 3;
-    width: 100%;
-    margin: 1 0;
-    padding: 0;
+  background: transparent;
+  border: none;
+  height: 3;
+  width: 100%;
+  margin: 1 0;
+  padding: 0;
 }
 
-/* Текст в кнопках - выравниваем по левому краю с отступом */
 .menu-item {
-    color: #ffffff;
-    text-align: left;
-    width: 100%;
-    padding-left: 2;  /* Отступ слева чтобы текст не прилипал к краю */
-    content-align: left middle;
+  color: #ffffff;
+  text-align: left;
+  width: 100%;
+  padding-left: 2;
+  content-align: left middle;
 }
 
-/* Активная кнопка */
 .menu-button.active .menu-item {
-    color: #00ff00;
+  color: #00ff00;
 }
 
-/* Hover */
 .menu-button:hover .menu-item {
-    color: #cccccc;
+  color: #cccccc;
 }
 
-/* Убираем скролл */
 .menu-list > .list-view--scrollbar {
-    display: none;
+  display: none;
 }
 
 ListView:focus {
-    border: none;
-    background: transparent;
+  border: none;
+  background: transparent;
 }
