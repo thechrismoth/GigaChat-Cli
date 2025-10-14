@@ -65,11 +65,16 @@ class ChatScreen(Screen):
 
             if match:
                 filename = match.group(1)
-                message = match.group(2)
+                message = match.group(2).strip()
                 
                 file = open_file(filename)
-                self.user_inputs.append(("Вы", f"{message}\n```\n{file}\n```"))
+
+                if file.startswith("Ошибка"):
+                    self.user_inputs.append(("Система", file))
+                    self.update_chat_display()
+                    return
                 
+                self.user_inputs.append(("Вы", f"{message}\n```\n{file}\n```"))    
                 # Обновляем отображение с Markdown
                 self.update_chat_display()
 
