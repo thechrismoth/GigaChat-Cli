@@ -1,5 +1,6 @@
 import importlib.resources
 import asyncio
+import re
 
 from textual.app import ComposeResult
 from textual.widgets import TextArea, Markdown
@@ -8,6 +9,7 @@ from textual.containers import VerticalScroll
 from textual import events
 
 from gigachat_cli.utils.core import get_answer
+from gigachat_cli.utils.openfile import open_file
 from gigachat_cli.widgets.banner import Banner
 from gigachat_cli.widgets.dir import Dir
 from gigachat_cli.widgets.typing import TypingIndicator
@@ -54,24 +56,46 @@ class ChatScreen(Screen):
         if not user_text:
             return
 
-        if user_text.lower() in ['quit', 'exit', 'q']:
+        if user_text.lower().startswith('/exit'):
             self.app.exit("Результат работы")
             return
 
-        # Добавляем сообщение пользователя
-        self.user_inputs.append(("Вы", user_text))
-        
-        # Обновляем отображение с Markdown
-        self.update_chat_display()
-        
-        # Показываем индикатор набора
-        self.current_typing_indicator = TypingIndicator()
-        chat_container = self.query_one("#chat_container")
-        chat_container.mount(self.current_typing_indicator)
-        
-        # Запускаем получение ответа от бота в фоне
-        asyncio.create_task(self.get_bot_response(user_text))
-        
+        if user_text.lower().startswith('/file'):
+            match = re.match(r'/file\s+(\S+)\s+(.+)', user_text)
+
+            if match:
+                filename = match.group(1)
+                message = match.group(2)
+                
+                file = open_file(filename)
+                self.user_inputs.append(("Вы", f"{message}\n```\n{file}\n```"))
+                
+                # Обновляем отображение с Markdown
+                self.update_chat_display()
+
+                # Показываем индикатор набора
+                self.current_typing_indicator = TypingIndicator()
+                chat_container = self.query_one("#chat_container")
+                chat_container.mount(self.current_typing_indicator)
+
+                # Запускаем получение ответа от бота в фоне
+                asyncio.create_task(self.get_bot_response(f"{message}\n```\n{file}\n```"))
+
+        else:
+            # Добавляем сообщение пользователя
+            self.user_inputs.append(("Вы", user_text))
+
+            # Обновляем отображение с Markdown
+            self.update_chat_display()
+
+            # Показываем индикатор набора
+            self.current_typing_indicator = TypingIndicator()
+            chat_container = self.query_one("#chat_container")
+            chat_container.mount(self.current_typing_indicator)
+
+            # Запускаем получение ответа от бота в фоне
+            asyncio.create_task(self.get_bot_response(user_text))
+
         # Очищаем поле ввода
         text_area.text = ""
         text_area.focus()
