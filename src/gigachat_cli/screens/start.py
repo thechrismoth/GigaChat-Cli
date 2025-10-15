@@ -10,7 +10,7 @@ from gigachat_cli.screens.help import HelpScreen
 from gigachat_cli.widgets.banner import Banner
 
 class MenuApp(Screen):
-    CSS = importlib.resources.read_text("gigachat_cli.styles", "start.css")
+    CSS = importlib.resources.files("gigachat_cli.styles").joinpath("start.css").read_text() 
 
     def compose(self) -> ComposeResult:
         yield Container(

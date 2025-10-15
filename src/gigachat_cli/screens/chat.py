@@ -16,8 +16,8 @@ from gigachat_cli.widgets.dir import Dir
 from gigachat_cli.widgets.typing import TypingIndicator
 
 class ChatScreen(Screen):
-    CSS = importlib.resources.read_text("gigachat_cli.styles", "chat.css")
-
+    CSS = importlib.resources.files("gigachat_cli.styles").joinpath("chat.css").read_text()
+    
     def __init__(self):
         super().__init__()
         self.command_handler = CommandHandler()  # Создаем экземпляр обработчика

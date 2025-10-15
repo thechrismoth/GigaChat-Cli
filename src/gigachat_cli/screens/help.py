@@ -40,7 +40,9 @@ export GIGACHAT_API_KEY="YOUR_API_KEY"
 """
 
 class HelpScreen(Screen):
-    CSS = importlib.resources.read_text("gigachat_cli.styles", "help.css")
+    CSS = importlib.resources.files("gigachat_cli.styles").joinpath("help.css").read_text()
+
+
     def compose(self) -> ComposeResult:
         yield VerticalScroll(
             Banner(),

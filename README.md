@@ -16,7 +16,7 @@ cd gigachat_cli
 Установите пакет
 
 ```
-pip instal -e .
+pip install gigachat-cli
 ```
 ## 🔐 Authentication Options
 
