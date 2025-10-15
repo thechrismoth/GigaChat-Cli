@@ -1,6 +1,6 @@
 [project]
 name = "gigachat-cli"
-version = "0.1.4"
+version = "0.1.5"
 description = "GigaChat CLI utility"
 authors = [
     {name = "THEChrismoth",email = "klevindanila@ya.ru"}
