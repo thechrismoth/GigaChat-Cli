@@ -1,6 +1,6 @@
 [project]
 name = "gigachat-cli"
-version = "0.1.0"
+version = "0.1.4"
 description = "GigaChat CLI utility"
 authors = [
     {name = "THEChrismoth",email = "klevindanila@ya.ru"}
@@ -28,3 +28,5 @@ gigachat = "gigachat_cli.__main__:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
+
+

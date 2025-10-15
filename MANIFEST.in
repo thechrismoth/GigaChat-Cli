@@ -1,0 +1,2 @@
+recursive-include src/gigachat_cli *.css
+recursive-include src/gigachat_cli *.md
