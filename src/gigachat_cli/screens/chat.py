@@ -5,12 +5,13 @@ import re
 from textual.app import ComposeResult
 from textual.widgets import TextArea, Markdown
 from textual.screen import Screen
-from textual.containers import VerticalScroll
+from textual.containers import VerticalScroll, Horizontal
 from textual import events
 
 from gigachat_cli.utils.core import get_answer
 from gigachat_cli.utils.openfile import open_file
 from gigachat_cli.utils.command import CommandHandler
+from gigachat_cli.widgets.model import Model
 from gigachat_cli.widgets.banner import Banner
 from gigachat_cli.widgets.dir import Dir
 from gigachat_cli.widgets.typing import TypingIndicator
@@ -30,7 +31,9 @@ class ChatScreen(Screen):
             placeholder="Введите сообщение... (Используйте Shift+Enter для отправки)", 
             id="message_input"
         )
-        yield Dir(classes="dir")
+        with Horizontal(classes="status_bar"):
+            yield Dir(classes="dir")
+            yield Model(classes="model")
 
     def on_mount(self) -> None:
         self.user_inputs = [] 
@@ -197,3 +200,4 @@ class ChatScreen(Screen):
     def on_unmount(self) -> None:
         if self.current_typing_indicator:
             self.current_typing_indicator.stop_animation()
+
