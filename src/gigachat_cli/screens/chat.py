@@ -11,6 +11,9 @@ from textual import events
 from gigachat_cli.utils.core import get_answer
 from gigachat_cli.utils.openfile import open_file
 from gigachat_cli.utils.command import CommandHandler
+from gigachat_cli.utils.list import ListHandler
+
+from gigachat_cli.widgets.command_list import CommandList
 from gigachat_cli.widgets.model import Model
 from gigachat_cli.widgets.banner import Banner
 from gigachat_cli.widgets.dir import Dir
@@ -21,12 +24,15 @@ class ChatScreen(Screen):
     
     def __init__(self):
         super().__init__()
-        self.command_handler = CommandHandler()  # Создаем экземпляр обработчика
+        # Создаем экземпляры обработчиков
+        self.command_handler = CommandHandler() # Обработчик терминальных команд
+        self.list_handler = ListHandler() # Обработчик списков
 
     def compose(self) -> ComposeResult:
         yield Banner(classes="banner")
         with VerticalScroll(id="chat_container"):
             yield Markdown("", id="chat_display")
+        yield CommandList(id="command_list", classes="hidden") 
         yield TextArea(
             placeholder="Введите сообщение... (Используйте Shift+Enter для отправки)", 
             id="message_input"
@@ -39,8 +45,20 @@ class ChatScreen(Screen):
         self.user_inputs = [] 
         self.current_typing_indicator = None
         self.query_one("#message_input").focus()
-        self._update_directory_display()  # Обновляем отображение директории при запуске
-    
+        self._update_directory_display()
+        self.query_one("#command_list", CommandList).add_class("hidden")
+
+    def on_text_area_changed(self, event: TextArea.Changed) -> None:
+        text_area = event.text_area
+        command_list = self.query_one("#command_list", CommandList)
+
+        if self.list_handler.should_show_commands(text_area.text):
+            filtered_commands = self.list_handler.get_filtered_commands(text_area.text)
+            command_list.update_commands(filtered_commands)
+
+        else:
+            command_list.add_class("hidden")
+
     # Обработчик буфера обмена
     def on_paste(self, event: events.Paste) -> None:
         text_area = self.query_one("#message_input", TextArea)
@@ -51,8 +69,11 @@ class ChatScreen(Screen):
         event.prevent_default()
     
     def on_key(self, event: events.Key) -> None:
+        command_list = self.query_one("#command_list", CommandList)
+
         if event.key == "shift+enter":
             asyncio.create_task(self.process_message())
+            command_list.add_class("hidden")
             event.prevent_default() 
     
     # Оработка полученного сообщения
@@ -78,9 +99,16 @@ class ChatScreen(Screen):
         if user_text.lower().startswith('/file'):
             await self.handle_file_command(user_text, text_area)
             return
+
+        if user_text.lower().startswith('/model'):
+            await self.handle_model_command(user_text, text_area)
         
         # Вызов обработки обращения к API GigaChat
         await self.handle_gigachat_message(user_text, text_area)
+
+    # Обработка коанды /model
+    async def handle_model_command(self, user_text: str, text_area: TextArea) -> None:
+        pass
     
     # Обработка терминальных команд
     async def handle_terminal_command(self, command: str, text_area: TextArea) -> None:

@@ -36,4 +36,6 @@
   height: 4;
 }
 
-
+.hidden {
+    display: none;
+}
