@@ -13,6 +13,8 @@ from gigachat_cli.utils.openfile import open_file
 from gigachat_cli.utils.command import CommandHandler
 from gigachat_cli.utils.list import ListHandler
 
+from gigachat_cli.handler.file import FileHandler
+
 from gigachat_cli.widgets.command_list import CommandList
 from gigachat_cli.widgets.model import Model
 from gigachat_cli.widgets.banner import Banner
@@ -25,6 +27,7 @@ class ChatScreen(Screen):
     def __init__(self):
         super().__init__()
         # Создаем экземпляры обработчиков
+        self.file_handler = FileHandler()
         self.command_handler = CommandHandler() # Обработчик терминальных команд
         self.list_handler = ListHandler() # Обработчик списков
 
@@ -60,13 +63,13 @@ class ChatScreen(Screen):
             command_list.add_class("hidden")
 
     # Обработчик буфера обмена
-    def on_paste(self, event: events.Paste) -> None:
-        text_area = self.query_one("#message_input", TextArea)
+    #def on_paste(self, event: events.Paste) -> None:
+        #text_area = self.query_one("#message_input", TextArea)
         
-        if event.text:
-            text_area.insert(event.text)
+        #if event.text:
+            #text_area.insert(event.text)
         
-        event.prevent_default()
+        #event.prevent_default()
     
     def on_key(self, event: events.Key) -> None:
         command_list = self.query_one("#command_list", CommandList)
@@ -96,8 +99,7 @@ class ChatScreen(Screen):
             return
         
         # Вызов обработчика работы с файлами
-        if user_text.lower().startswith('/file'):
-            await self.handle_file_command(user_text, text_area)
+        if await self.file_handler.handle(user_text, text_area, self):
             return
 
         if user_text.lower().startswith('/model'):
@@ -138,30 +140,7 @@ class ChatScreen(Screen):
         text_area.focus()
     
     # Обработка комады /file для работы с файлами
-    async def handle_file_command(self, user_text: str, text_area: TextArea) -> None:
-        match = re.match(r'/file\s+(\S+)\s+(.+)', user_text)
-
-        if match:
-            filename = match.group(1)
-            message = match.group(2).strip()
-            
-            # Используем текущую директорию из обработчика команд
-            current_dir = self.command_handler.get_current_directory()
-            file = open_file(filename, base_dir=current_dir)
-
-            if file.startswith("Ошибка"):
-                self.user_inputs.append(("Система", file))
-                self.update_chat_display()
-                return
-            
-            self.user_inputs.append(("Вы", f"{message}\n```\n{file}\n```"))    
-            self.update_chat_display()
-
-            self.current_typing_indicator = TypingIndicator()
-            chat_container = self.query_one("#chat_container")
-            chat_container.mount(self.current_typing_indicator)
-
-            asyncio.create_task(self.get_bot_response(f"{message}\n```\n{file}\n```"))
+    
     
     # Обработка сообщений к API
     async def handle_gigachat_message(self, user_text: str, text_area: TextArea) -> None:
