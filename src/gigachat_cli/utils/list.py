@@ -1,4 +1,4 @@
-class ListHandler:
+class ListUtils:
 
     def __init__(self):
         self.commands = ["exit", "file", "model"]

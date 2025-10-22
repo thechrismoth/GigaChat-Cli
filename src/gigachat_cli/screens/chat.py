@@ -10,10 +10,11 @@ from textual import events
 
 from gigachat_cli.utils.core import get_answer
 from gigachat_cli.utils.openfile import open_file
-from gigachat_cli.utils.command import CommandHandler
-from gigachat_cli.utils.list import ListHandler
+from gigachat_cli.utils.command import CommandUtils
+from gigachat_cli.utils.list import ListUtils
 
 from gigachat_cli.handler.file import FileHandler
+from gigachat_cli.handler.terminal_command import TerminalHandler
 
 from gigachat_cli.widgets.command_list import CommandList
 from gigachat_cli.widgets.model import Model
@@ -26,10 +27,12 @@ class ChatScreen(Screen):
     
     def __init__(self):
         super().__init__()
-        # Создаем экземпляры обработчиков
+        # Обработчики хендлеров
         self.file_handler = FileHandler()
-        self.command_handler = CommandHandler() # Обработчик терминальных команд
-        self.list_handler = ListHandler() # Обработчик списков
+        self.terminal_handler = TerminalHandler()
+        # Обработчики утилит
+        self.command_utils = CommandUtils() 
+        self.list_utils = ListUtils()
 
     def compose(self) -> ComposeResult:
         yield Banner(classes="banner")
@@ -55,21 +58,12 @@ class ChatScreen(Screen):
         text_area = event.text_area
         command_list = self.query_one("#command_list", CommandList)
 
-        if self.list_handler.should_show_commands(text_area.text):
-            filtered_commands = self.list_handler.get_filtered_commands(text_area.text)
+        if self.list_utils.should_show_commands(text_area.text):
+            filtered_commands = self.list_utils.get_filtered_commands(text_area.text)
             command_list.update_commands(filtered_commands)
 
         else:
             command_list.add_class("hidden")
-
-    # Обработчик буфера обмена
-    #def on_paste(self, event: events.Paste) -> None:
-        #text_area = self.query_one("#message_input", TextArea)
-        
-        #if event.text:
-            #text_area.insert(event.text)
-        
-        #event.prevent_default()
     
     def on_key(self, event: events.Key) -> None:
         command_list = self.query_one("#command_list", CommandList)
@@ -92,14 +86,12 @@ class ChatScreen(Screen):
             self.app.exit("Результат работы")
             return
         
-        # Вызов обработчика терминальных команд
-        is_terminal, terminal_command = CommandHandler.is_terminal_command(user_text)
-        if is_terminal:
-            await self.handle_terminal_command(terminal_command, text_area)
+        # Вызов обработчика терминальных команд 
+        if await self.terminal_handler.handle(user_text,text_area, self):
             return
         
         # Вызов обработчика работы с файлами
-        if await self.file_handler.handle(user_text, text_area, self):
+        if await self.file_handler.handle(user_text, self):
             return
 
         if user_text.lower().startswith('/model'):
@@ -111,36 +103,6 @@ class ChatScreen(Screen):
     # Обработка коанды /model
     async def handle_model_command(self, user_text: str, text_area: TextArea) -> None:
         pass
-    
-    # Обработка терминальных команд
-    async def handle_terminal_command(self, command: str, text_area: TextArea) -> None:
-        self.user_inputs.append(("Вы", f"`!{command}`"))
-        self.update_chat_display()
-        
-        self.current_typing_indicator = TypingIndicator()
-        chat_container = self.query_one("#chat_container")
-        chat_container.mount(self.current_typing_indicator)
-        
-       
-        success, output, return_code = await self.command_handler.execute_system_command(command)
-        
-        if self.current_typing_indicator:
-            self.current_typing_indicator.stop_animation()
-            self.current_typing_indicator.remove()
-            self.current_typing_indicator = None
-        
-        formatted_output = CommandHandler.format_command_output(output, success, return_code)
-        self.user_inputs.append(("Система", formatted_output))
-        
-        # Обновляем отображение директории после выполнения команды
-        self._update_directory_display()
-        
-        self.update_chat_display()
-        text_area.text = ""
-        text_area.focus()
-    
-    # Обработка комады /file для работы с файлами
-    
     
     # Обработка сообщений к API
     async def handle_gigachat_message(self, user_text: str, text_area: TextArea) -> None:
@@ -159,7 +121,7 @@ class ChatScreen(Screen):
     # Обновляем виджет текущей дирректории
     def _update_directory_display(self) -> None:
         dir_widget = self.query_one(Dir)
-        current_dir = self.command_handler.get_current_directory()
+        current_dir = self.command_utils.get_current_directory()
         dir_widget.current_dir = str(current_dir)
         dir_widget.refresh()    
         
