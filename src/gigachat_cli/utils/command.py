@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Tuple, Optional
 
 # Обработчик терминальных команд
-class CommandHandler:
+class CommandUtils:
     
     def __init__(self):
         self.current_directory = Path.cwd()

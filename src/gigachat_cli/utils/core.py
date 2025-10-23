@@ -51,3 +51,4 @@ async def get_answer(prompt: str, clear_history: bool = False) -> str:
 
 def clear_chat_history() -> str:
     return chat_manager.clear_history()
+

@@ -4,8 +4,22 @@
   text-align: center;
 }
 
+.status_bar {
+  height: 1;
+  width: 100%;
+  layout: horizontal;
+}
+
 .dir{
   color: yellow;
+  width: 1fr;
+  text-align: left;
+}
+
+.model{
+  color: blue;
+  width: 1fr;
+  text-align: right;
 }
 
 .typing-indicator {
@@ -20,4 +34,8 @@
   background: transparent !important;
   outline: none !important;
   height: 4;
+}
+
+.hidden {
+    display: none;
 }
