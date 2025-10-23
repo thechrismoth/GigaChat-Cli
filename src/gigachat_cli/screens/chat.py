@@ -1,6 +1,5 @@
 import importlib.resources
 import asyncio
-import re
 
 from textual.app import ComposeResult
 from textual.widgets import TextArea, Markdown
@@ -9,7 +8,6 @@ from textual.containers import VerticalScroll, Horizontal
 from textual import events
 
 from gigachat_cli.utils.core import get_answer
-from gigachat_cli.utils.openfile import open_file
 from gigachat_cli.utils.command import CommandUtils
 from gigachat_cli.utils.list import ListUtils
 
@@ -27,12 +25,14 @@ class ChatScreen(Screen):
     
     def __init__(self):
         super().__init__()
-        # Обработчики хендлеров
-        self.file_handler = FileHandler()
-        self.terminal_handler = TerminalHandler()
         # Обработчики утилит
-        self.command_utils = CommandUtils() 
+        self.command_utils = CommandUtils()
         self.list_utils = ListUtils()
+        # Обработчик хендлеров 
+        self.handlers =[
+            FileHandler(),
+            TerminalHandler(self.command_utils)
+        ]        
 
     def compose(self) -> ComposeResult:
         yield Banner(classes="banner")
@@ -86,23 +86,12 @@ class ChatScreen(Screen):
             self.app.exit("Результат работы")
             return
         
-        # Вызов обработчика терминальных команд 
-        if await self.terminal_handler.handle(user_text,text_area, self):
-            return
-        
-        # Вызов обработчика работы с файлами
-        if await self.file_handler.handle(user_text, self):
-            return
-
-        if user_text.lower().startswith('/model'):
-            await self.handle_model_command(user_text, text_area)
+        for handle in self.handlers:
+            if await handle.handle(user_text,text_area, self):
+                return
         
         # Вызов обработки обращения к API GigaChat
         await self.handle_gigachat_message(user_text, text_area)
-
-    # Обработка коанды /model
-    async def handle_model_command(self, user_text: str, text_area: TextArea) -> None:
-        pass
     
     # Обработка сообщений к API
     async def handle_gigachat_message(self, user_text: str, text_area: TextArea) -> None:

@@ -4,9 +4,9 @@ from gigachat_cli.utils.command import CommandUtils
 from gigachat_cli.widgets.typing import TypingIndicator
 
 class TerminalHandler:
-    def __init__(self):
+    def __init__(self, command_utils: CommandUtils):
         super().__init__()
-        self.command_utils = CommandUtils()  
+        self.command_utils = command_utils  
 
     async def handle(self, user_text: str, text_area: TextArea, screen):
         is_terminal, command = CommandUtils.is_terminal_command(user_text) 
