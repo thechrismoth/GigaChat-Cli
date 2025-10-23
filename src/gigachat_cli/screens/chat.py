@@ -7,11 +7,14 @@ from textual.screen import Screen
 from textual.containers import VerticalScroll, Horizontal
 from textual import events
 
+from gigachat_cli.utils.config import Config
 from gigachat_cli.utils.core import get_answer
 from gigachat_cli.utils.command import CommandUtils
 from gigachat_cli.utils.list import ListUtils
+from gigachat_cli.utils.config import Config
 
 from gigachat_cli.handler.file import FileHandler
+from gigachat_cli.handler.model import ModelHandler
 from gigachat_cli.handler.terminal_command import TerminalHandler
 
 from gigachat_cli.widgets.command_list import CommandList
@@ -28,9 +31,11 @@ class ChatScreen(Screen):
         # Обработчики утилит
         self.command_utils = CommandUtils()
         self.list_utils = ListUtils()
+        self.cfg = Config()
         # Обработчик хендлеров 
         self.handlers =[
             FileHandler(),
+            ModelHandler(self.cfg),
             TerminalHandler(self.command_utils)
         ]        
 
@@ -106,6 +111,12 @@ class ChatScreen(Screen):
         
         text_area.text = ""
         text_area.focus()
+
+    def _update_model_display(self) -> None:
+        model_widget = self.query_one(Model)
+        current_model = self.cfg.get_model()
+        model_widget.current_model = str(current_model)
+        model_widget.refresh()
     
     # Обновляем виджет текущей дирректории
     def _update_directory_display(self) -> None:
