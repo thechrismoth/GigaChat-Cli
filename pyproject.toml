@@ -1,6 +1,6 @@
 [project]
 name = "gigachat-cli"
-version = "0.2.0"
+dynamic = ["version"]
 description = "GigaChat CLI utility"
 authors = [
     {name = "THEChrismoth",email = "klevindanila@ya.ru"}
@@ -13,6 +13,7 @@ dependencies = [
     "importlib-resources>=6.5.2",
     "langchain-gigachat>=0.3.12",
     "regex>=2025.9.18",
+    "setuptools-scm>=9.2.2",
     "textual>=6.2.0",
 ]
 classifiers = [
@@ -30,4 +31,5 @@ gigachat = "gigachat_cli.__main__:main"
 [tool.setuptools]
 package-dir = {"" = "src"}
 
-
+[tool.setuptools_scm]
+write_to = "src/gigachat_cli/_version.py"
