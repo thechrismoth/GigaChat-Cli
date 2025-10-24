@@ -1,6 +1,6 @@
 [project]
 name = "gigachat-cli"
-dynamic = ["version"]
+version = "1.0.0"
 description = "GigaChat CLI utility"
 authors = [
     {name = "THEChrismoth",email = "klevindanila@ya.ru"}
@@ -30,6 +30,3 @@ gigachat = "gigachat_cli.__main__:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-
-[tool.setuptools_scm]
-write_to = "src/gigachat_cli/_version.py"
