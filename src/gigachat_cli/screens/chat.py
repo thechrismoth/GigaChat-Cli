@@ -2,7 +2,7 @@ import importlib.resources
 import asyncio
 
 from textual.app import ComposeResult
-from textual.widgets import TextArea, Markdown
+from textual.widgets import Input, Markdown
 from textual.screen import Screen
 from textual.containers import VerticalScroll, Horizontal
 from textual import events
@@ -11,7 +11,6 @@ from gigachat_cli.utils.config import Config
 from gigachat_cli.utils.core import get_answer
 from gigachat_cli.utils.command import CommandUtils
 from gigachat_cli.utils.list import ListUtils
-from gigachat_cli.utils.config import Config
 
 from gigachat_cli.handler.file import FileHandler
 from gigachat_cli.handler.model import ModelHandler
@@ -44,8 +43,8 @@ class ChatScreen(Screen):
         with VerticalScroll(id="chat_container"):
             yield Markdown("", id="chat_display")
         yield CommandList(id="command_list", classes="hidden") 
-        yield TextArea(
-            placeholder="Введите сообщение... (Используйте Shift+Enter для отправки)", 
+        yield Input(
+            placeholder="Введите сообщение... (Нажмите Enter для отправки)", 
             id="message_input"
         )
         with Horizontal(classes="status_bar"):
@@ -59,29 +58,27 @@ class ChatScreen(Screen):
         self._update_directory_display()
         self.query_one("#command_list", CommandList).add_class("hidden")
 
-    def on_text_area_changed(self, event: TextArea.Changed) -> None:
-        text_area = event.text_area
+    def on_input_changed(self, event: Input.Changed) -> None:
+        input_field = event.input
         command_list = self.query_one("#command_list", CommandList)
 
-        if self.list_utils.should_show_commands(text_area.text):
-            filtered_commands = self.list_utils.get_filtered_commands(text_area.text)
+        if self.list_utils.should_show_commands(input_field.value):
+            filtered_commands = self.list_utils.get_filtered_commands(input_field.value)
             command_list.update_commands(filtered_commands)
 
         else:
             command_list.add_class("hidden")
     
-    def on_key(self, event: events.Key) -> None:
+    def on_input_submitted(self, event: Input.Submitted) -> None:
         command_list = self.query_one("#command_list", CommandList)
-
-        if event.key == "shift+enter":
-            asyncio.create_task(self.process_message())
-            command_list.add_class("hidden")
-            event.prevent_default() 
+        asyncio.create_task(self.process_message())
+        command_list.add_class("hidden")
+        event.prevent_default() 
     
     # Оработка полученного сообщения
     async def process_message(self) -> None:
-        text_area = self.query_one("#message_input", TextArea)
-        user_text = text_area.text.strip()
+        input_field = self.query_one("#message_input", Input)
+        user_text = input_field.value.strip()
 
         if not user_text:
             return
@@ -92,14 +89,14 @@ class ChatScreen(Screen):
             return
         
         for handle in self.handlers:
-            if await handle.handle(user_text,text_area, self):
+            if await handle.handle(user_text, input_field, self):
                 return
         
         # Вызов обработки обращения к API GigaChat
-        await self.handle_gigachat_message(user_text, text_area)
+        await self.handle_gigachat_message(user_text, input_field)
     
     # Обработка сообщений к API
-    async def handle_gigachat_message(self, user_text: str, text_area: TextArea) -> None:
+    async def handle_gigachat_message(self, user_text: str, input_field: Input) -> None:
         self.user_inputs.append(("Вы", user_text))
         self.update_chat_display()
 
@@ -109,8 +106,8 @@ class ChatScreen(Screen):
 
         asyncio.create_task(self.get_bot_response(user_text))
         
-        text_area.text = ""
-        text_area.focus()
+        input_field.value = ""
+        input_field.focus()
 
     def _update_model_display(self) -> None:
         model_widget = self.query_one(Model)
@@ -169,4 +166,3 @@ class ChatScreen(Screen):
     def on_unmount(self) -> None:
         if self.current_typing_indicator:
             self.current_typing_indicator.stop_animation()
-

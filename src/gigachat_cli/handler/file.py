@@ -1,14 +1,14 @@
 import re
 import asyncio
 
-from textual.widgets import TextArea
+from textual.widgets import Input
 
 from gigachat_cli.utils.openfile import open_file
 from gigachat_cli.widgets.typing import TypingIndicator
 
 # Хендлер обработки команды /file
 class FileHandler:
-    async def handle(self, user_text: str, text_area: TextArea, screen):
+    async def handle(self, user_text: str, input_field: Input, screen):
         if not user_text.lower().startswith('/file'):
             return False
         

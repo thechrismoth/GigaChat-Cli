@@ -1,4 +1,4 @@
-from textual.widgets import TextArea
+from textual.widgets import Input
 
 from gigachat_cli.utils.command import CommandUtils
 from gigachat_cli.widgets.typing import TypingIndicator
@@ -8,7 +8,7 @@ class TerminalHandler:
         super().__init__()
         self.command_utils = command_utils  
 
-    async def handle(self, user_text: str, text_area: TextArea, screen):
+    async def handle(self, user_text: str, input_field: Input, screen):
         is_terminal, command = CommandUtils.is_terminal_command(user_text) 
         if is_terminal:
 
@@ -34,7 +34,7 @@ class TerminalHandler:
             screen._update_directory_display()
         
             screen.update_chat_display()
-            text_area.text = ""
-            text_area.focus()
+            input_field.value = ""
+            input_field.focus()
             return True
         return False

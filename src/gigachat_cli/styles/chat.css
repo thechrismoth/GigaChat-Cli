@@ -30,7 +30,7 @@
 }
 
 #message_input {
-  border: none !important;
+  border: round green;
   background: transparent !important;
   outline: none !important;
   height: 4;

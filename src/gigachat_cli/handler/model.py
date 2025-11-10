@@ -1,6 +1,6 @@
 import re
 
-from textual.widgets import TextArea
+from textual.widgets import Input
 
 from gigachat_cli.utils.config import Config
 
@@ -14,7 +14,7 @@ class ModelHandler:
             "GigaChat-2-Max": "GigaChat 2 Max",
         }
 
-    async def handle(self, user_text: str, text_area: TextArea, screen):
+    async def handle(self, user_text: str, input_field: Input, screen):
         if not user_text.lower().startswith('/model'):
             return False
 
@@ -25,9 +25,9 @@ class ModelHandler:
             screen.update_chat_display()
         
             # Очищаем поле ввода
-            text_area = screen.query_one("#message_input", TextArea)
-            text_area.text = ""
-            text_area.focus()
+            input_field = screen.query_one("#message_input", Input)
+            input_field.value = ""
+            input_field.focus()
 
             return True
         else:
@@ -48,11 +48,10 @@ class ModelHandler:
                 screen.update_chat_display()
 
                 # Очищаем поле ввода
-                text_area = screen.query_one("#message_input", TextArea)
-                text_area.text = ""
-                text_area.focus()
+                input_field = screen.query_one("#message_input", Input)
+                input_field.value = ""
+                input_field.focus()
 
                 return True
 
         return False
-
