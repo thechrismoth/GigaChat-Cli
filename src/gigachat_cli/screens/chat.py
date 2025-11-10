@@ -84,7 +84,7 @@ class ChatScreen(Screen):
 
         if self.list_utils.should_show_commands(input_field.value):
             filtered_commands = self.list_utils.get_filtered_commands(input_field.value)
-            command_list.update_commands(filtered_commands)
+            command_list.update_commands(filtered_commands, input_field.value)
 
         else:
             command_list.add_class("hidden")
@@ -94,6 +94,11 @@ class ChatScreen(Screen):
         
         # Если активен селектор, не обрабатываем обычный Enter
         if self.selector_manager.selector_active:
+            event.prevent_default()
+            return
+
+        elif not command_list.has_class("hidden"):
+            command_list.apply_selection(event.input)
             event.prevent_default()
             return
             
@@ -106,6 +111,8 @@ class ChatScreen(Screen):
     
     # Обработчик нажатия клавишь
     def on_key(self, event: events.Key) -> None:
+        command_list = self.query_one("#command_list", CommandList)
+
         if self.selector_manager.selector_active:
             if event.key == "down":
                 self.selector_manager.select_next_item()
@@ -119,11 +126,20 @@ class ChatScreen(Screen):
             elif event.key == "escape":
                 self.selector_manager.cancel_selection()
                 event.prevent_default() 
-            # Убираем фокус с Input когда активен селектор
-            self.query_one("#message_input").blur()
-        else:
-            # Если не активен селектор - убеждаемся что Input в фокусе
-            self.query_one("#message_input").focus()
+
+        elif not command_list.has_class("hidden"):
+            if event.key == "tab":
+                command_list.select_next()
+                event.prevent_default()
+            elif event.key == "shift+tab":
+                command_list.select_previous()
+                event.prevent_default()
+            elif event.key == "enter":
+                command_list.apply_selection(self.query_one("#message_input"))
+                event.prevent_default()
+            elif event.key == "escape":
+                command_list.add_class("hidden")
+                event.prevent_default()
     
     # Оработка полученного сообщения
     async def process_message(self) -> None:

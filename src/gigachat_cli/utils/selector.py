@@ -70,6 +70,12 @@ class SelectorManager:
         if self.selector_active:
             selected_item = self.selector_items[self.selector_index]
             
+            # Удаляем виджеты селектора ПЕРЕД вызовом callback
+            if self.selector_widget:
+                self.selector_widget.remove()
+            if self.selector_instruction:
+                self.selector_instruction.remove()
+            
             # Вызываем callback если он есть
             if self.selector_callback:
                 self.selector_callback(selected_item, self.selector_index)
@@ -89,10 +95,11 @@ class SelectorManager:
             if self.selector_instruction:
                 self.selector_instruction.remove()
             
+            # Сбрасываем селектор ПЕРЕД показом сообщения
+            self.selector_active = False
+            
             # Показываем сообщение об отмене
             self.screen.update_chat_display("❌ Выбор отменен")
-            
-            self.selector_active = False
             
             # Возвращаем фокус на Input
             self.screen.query_one("#message_input").focus()

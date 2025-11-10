@@ -1,6 +1,6 @@
 import re
 
-from textual.widgets import Input  # ← ДОБАВЬ ЭТОТ ИМПОРТ
+from textual.widgets import Input
 
 from gigachat_cli.utils.config import Config
 
@@ -34,23 +34,7 @@ class ModelHandler:
             input_field.value = ""
             input_field.focus()
             return True
-        else:
-            # Если есть аргументы - обрабатываем выбор модели через текст
-            match = re.match(r'/model\s+(.+)', user_text) 
-            if match:
-                model_key = match.group(1).strip()
-                
-                if model_key in self.model_names:
-                    self.cfg.set_model(model_key)
-                    screen.update_chat_display(f"**Вы:** {user_text}\n\n**Система:** Выбрана модель: {self.model_names[model_key]}")
-                else:
-                    screen.update_chat_display(f"**Вы:** {user_text}\n\n**Система:** Модель '{model_key}' не найдена. Используйте /model для просмотра списка.")
-                
-                screen._update_model_display()
-                input_field.value = ""
-                input_field.focus()
-                return True
-
+ 
         return False
 
     # Вызываем Callback когда произведен выбор из списка
