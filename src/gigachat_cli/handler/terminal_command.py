@@ -11,15 +11,13 @@ class TerminalHandler:
     async def handle(self, user_text: str, input_field: Input, screen):
         is_terminal, command = CommandUtils.is_terminal_command(user_text) 
         if is_terminal:
+            # Показываем команду
+            screen.update_chat_display(f"**Вы:** `!{command}`")
 
-            screen.user_inputs.append(("Вы", f"`!{command}`"))
-            screen.update_chat_display()
-        
             screen.current_typing_indicator = TypingIndicator()
             chat_container = screen.query_one("#chat_container")
             chat_container.mount(screen.current_typing_indicator)
         
-       
             success, output, return_code = await self.command_utils.execute_system_command(command)
         
             if screen.current_typing_indicator:
@@ -28,12 +26,13 @@ class TerminalHandler:
                 screen.current_typing_indicator = None
         
             formatted_output = CommandUtils.format_command_output(output, success, return_code)
-            screen.user_inputs.append(("Система", formatted_output))
+            
+            # Показываем результат команды
+            screen.update_chat_display(f"**Вы:** `!{command}`\n\n**Система:**\n\n{formatted_output}")
         
             # Обновляем отображение директории после выполнения команды
             screen._update_directory_display()
         
-            screen.update_chat_display()
             input_field.value = ""
             input_field.focus()
             return True

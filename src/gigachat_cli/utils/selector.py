@@ -1,8 +1,9 @@
 from textual.widgets import Static
+
 from gigachat_cli.widgets.selector import SelectorWidget
 
+# Менеджер управления интерактивными списками
 class SelectorManager:
-    """Менеджер для управления интерактивными селекторами"""
     
     def __init__(self, screen):
         self.screen = screen
@@ -13,26 +14,28 @@ class SelectorManager:
         self.selector_callback = None
         self.selector_widget = None
         self.selector_instruction = None
-    
+   
+    # Функция для показа интерактивного списка
     def show_selector(self, items: list, title: str = "Выберите опцию:", callback=None) -> None:
-        """Универсальный метод для показа интерактивного списка"""
         self.selector_active = True
         self.selector_index = 0
         self.selector_items = items
         self.selector_title = title
         self.selector_callback = callback
         
+        # Очищаем чат перед показом селектора
+        self.screen.clear_chat_display()
+        
         # Создаем виджет селектора
         self.selector_widget = SelectorWidget()
         self.selector_widget.items = items
         self.selector_widget.selected_index = 0
         
-        # Добавляем в чат
+        # Добавляем заголовок в Markdown
         selector_content = f"**{title}**\n\n"
-        self.screen.user_inputs.append(("Система", selector_content))
-        self.screen.update_chat_display()
+        self.screen.update_chat_display(selector_content)
         
-        # Монтируем виджет после обновления чата
+        # Монтируем виджет селектора
         chat_container = self.screen.query_one("#chat_container")
         chat_container.mount(self.selector_widget)
         
@@ -40,27 +43,27 @@ class SelectorManager:
         instruction = Static("Используйте ↑↓ для выбора, Enter для подтверждения, Esc для отмены")
         chat_container.mount(instruction)
         self.selector_instruction = instruction
-
+    
+    # Обновляем отображение селектора
     def _update_selector_display(self) -> None:
-        """Обновляет отображение селектора"""
         if self.selector_widget:
             self.selector_widget.selected_index = self.selector_index
             self.selector_widget.refresh()
-
+    
+    # Следующий  элемент в списке
     def select_next_item(self) -> None:
-        """Выбирает следующий элемент в списке"""
         if self.selector_active:
             self.selector_index = (self.selector_index + 1) % len(self.selector_items)
             self._update_selector_display()
 
+    # Предыдущий элемент в списке
     def select_previous_item(self) -> None:
-        """Выбирает предыдущий элемент в списке"""
         if self.selector_active:
             self.selector_index = (self.selector_index - 1) % len(self.selector_items)
             self._update_selector_display()
-
+    
+    # Подтверждение выбора
     def confirm_selection(self) -> None:
-        """Подтверждает выбор"""
         if self.selector_active:
             selected_item = self.selector_items[self.selector_index]
             
@@ -76,9 +79,9 @@ class SelectorManager:
             
             # Сбрасываем селектор
             self.selector_active = False
-
+    
+    # Отмена выбора
     def cancel_selection(self) -> None:
-        """Отменяет выбор"""
         if self.selector_active:
             # Удаляем виджеты
             if self.selector_widget:
@@ -86,6 +89,5 @@ class SelectorManager:
             if self.selector_instruction:
                 self.selector_instruction.remove()
             
-            self.screen.user_inputs.append(("Система", "❌ Выбор отменен"))
+            self.screen.update_chat_display("❌ Выбор отменен")
             self.selector_active = False
-            self.screen.update_chat_display()

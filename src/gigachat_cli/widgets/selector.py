@@ -1,9 +1,9 @@
 from textual.widgets import Static
 from textual.reactive import reactive
 
+# Виджет для интерактивного выбора с цветовым выделением
 class SelectorWidget(Static):
-    """Виджет для интерактивного выбора с цветным выделением"""
-    
+
     items = reactive([])
     selected_index = reactive(0)
     

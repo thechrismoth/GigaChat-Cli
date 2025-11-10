@@ -57,7 +57,6 @@ class ChatScreen(Screen):
             yield Model(classes="model")
 
     def on_mount(self) -> None:
-        self.user_inputs = [] 
         self.current_typing_indicator = None
         self.query_one("#message_input").focus()
         self._update_directory_display()
@@ -115,6 +114,9 @@ class ChatScreen(Screen):
             self.app.exit("Результат работы")
             return
         
+        # Очищаем визуальный вывод перед новым сообщением
+        self.clear_chat_display()
+        
         for handle in self.handlers:
             if await handle.handle(user_text, input_field, self):
                 return
@@ -124,8 +126,8 @@ class ChatScreen(Screen):
     
     # Обработка сообщений к API
     async def handle_gigachat_message(self, user_text: str, input_field: Input) -> None:
-        self.user_inputs.append(("Вы", user_text))
-        self.update_chat_display()
+        # Показываем вопрос пользователя
+        self.update_chat_display(f"**Вы:** {user_text}")
 
         self.current_typing_indicator = TypingIndicator()
         chat_container = self.query_one("#chat_container")
@@ -147,22 +149,23 @@ class ChatScreen(Screen):
         dir_widget = self.query_one(Dir)
         current_dir = self.command_utils.get_current_directory()
         dir_widget.current_dir = str(current_dir)
-        dir_widget.refresh()    
-        
-    # Обновляем отображение чата
-    def update_chat_display(self) -> None:
-        output_lines = []
-        for sender, text in self.user_inputs:
-            if sender == "Вы":
-                output_lines.append(f"**{sender}:** {text}")
-            else:
-                output_lines.append(f"**{sender}:**\n\n{text}")
-        
-        output = "\n\n".join(output_lines)
-        
+        dir_widget.refresh()
+    
+    def clear_chat_display(self) -> None:
+        """Полностью очищает визуальное отображение чата"""
         chat_display = self.query_one("#chat_display", Markdown)
-        chat_display.update(output)
-
+        chat_display.update("")
+        
+        # Очищаем все дополнительные виджеты в контейнере чата
+        chat_container = self.query_one("#chat_container")
+        for child in chat_container.children:
+            if child.id != "chat_display":
+                child.remove()
+    
+    def update_chat_display(self, content: str = "") -> None:
+        """Обновляет отображение чата"""
+        chat_display = self.query_one("#chat_display", Markdown)
+        chat_display.update(content)
         self.query_one("#chat_container").scroll_end()
     
     # Получаем ответ и выводим на экран
@@ -175,20 +178,15 @@ class ChatScreen(Screen):
                 self.current_typing_indicator.remove()
                 self.current_typing_indicator = None
             
-            self.user_inputs.append(("GigaChat", bot_response))
-            
-            if len(self.user_inputs) > 10:
-                self.user_inputs = self.user_inputs[-10:]
-            
-            self.update_chat_display()
+            # Показываем вопрос + ответ
+            self.update_chat_display(f"**Вы:** {user_text}\n\n**GigaChat:**\n\n{bot_response}")
             
         except Exception as e:
             if self.current_typing_indicator:
                 self.current_typing_indicator.stop_animation()
                 self.current_typing_indicator.remove()
                 self.current_typing_indicator = None
-            self.user_inputs.append(("GigaChat", f"**Ошибка:** {str(e)}"))
-            self.update_chat_display()
+            self.update_chat_display(f"**Вы:** {user_text}\n\n**GigaChat:**\n\n**Ошибка:** {str(e)}")
     
     def on_unmount(self) -> None:
         if self.current_typing_indicator:

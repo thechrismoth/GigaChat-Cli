@@ -21,20 +21,20 @@ class FileHandler:
             file = open_file(filename)
 
             if file.startswith("Ошибка"):
-                screen.user_inputs.append(("Система", file))
-                screen.update_chat_display()
+                # Показываем ошибку
+                screen.update_chat_display(f"**Вы:** {user_text}\n\n**Система:** {file}")
                 return True 
             
-            screen.user_inputs.append(("Вы", f"{message}\n```\n{file}\n```"))    
-            screen.update_chat_display()
+            # Показываем вопрос с файлом
+            screen.update_chat_display(f"**Вы:** {message}\n```\n{file}\n```")
 
             screen.current_typing_indicator = TypingIndicator()
             chat_container = screen.query_one("#chat_container")
             chat_container.mount(screen.current_typing_indicator)
 
+            # Отправляем в нейросеть
             asyncio.create_task(screen.get_bot_response(f"{message}\n```\n{file}\n```"))
 
             return True
         
         return False
-             
