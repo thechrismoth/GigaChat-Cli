@@ -2,7 +2,7 @@ import importlib.resources
 import asyncio
 
 from textual.app import ComposeResult
-from textual.widgets import Input, Markdown, Static
+from textual.widgets import Input, Markdown
 from textual.screen import Screen
 from textual.containers import VerticalScroll, Horizontal
 from textual import events
@@ -11,6 +11,7 @@ from gigachat_cli.utils.config import Config
 from gigachat_cli.utils.core import get_answer
 from gigachat_cli.utils.command import CommandUtils
 from gigachat_cli.utils.list import ListUtils
+from gigachat_cli.utils.selector import SelectorManager
 
 from gigachat_cli.handler.file import FileHandler
 from gigachat_cli.handler.model import ModelHandler
@@ -21,7 +22,6 @@ from gigachat_cli.widgets.model import Model
 from gigachat_cli.widgets.banner import Banner
 from gigachat_cli.widgets.dir import Dir
 from gigachat_cli.widgets.typing import TypingIndicator
-from gigachat_cli.widgets.selector import SelectorWidget
 
 class ChatScreen(Screen):
     CSS = importlib.resources.files("gigachat_cli.styles").joinpath("chat.css").read_text()
@@ -32,10 +32,14 @@ class ChatScreen(Screen):
         self.command_utils = CommandUtils()
         self.list_utils = ListUtils()
         self.cfg = Config()
+        
+        # Менеджер селекторов
+        self.selector_manager = SelectorManager(self)
+        
         # Обработчик хендлеров 
         self.handlers =[
             FileHandler(),
-            ModelHandler(self.cfg, self),  # Передаем screen в ModelHandler
+            ModelHandler(self.cfg, self),
             TerminalHandler(self.command_utils)
         ]        
 
@@ -74,7 +78,7 @@ class ChatScreen(Screen):
         command_list = self.query_one("#command_list", CommandList)
         
         # Если активен селектор, не обрабатываем обычный Enter
-        if hasattr(self, 'selector_active') and self.selector_active:
+        if self.selector_manager.selector_active:
             event.prevent_default()
             return
             
@@ -84,18 +88,18 @@ class ChatScreen(Screen):
     
     def on_key(self, event: events.Key) -> None:
         """Обрабатывает нажатия клавиш для селектора"""
-        if hasattr(self, 'selector_active') and self.selector_active:
+        if self.selector_manager.selector_active:
             if event.key == "down":
-                self.select_next_item()
+                self.selector_manager.select_next_item()
                 event.prevent_default()
             elif event.key == "up":
-                self.select_previous_item()
+                self.selector_manager.select_previous_item()
                 event.prevent_default()
             elif event.key == "enter":
-                self.confirm_selection()
+                self.selector_manager.confirm_selection()
                 event.prevent_default()
             elif event.key == "escape":
-                self.cancel_selection()
+                self.selector_manager.cancel_selection()
                 event.prevent_default()
     
     # Оработка полученного сообщения
@@ -189,80 +193,3 @@ class ChatScreen(Screen):
     def on_unmount(self) -> None:
         if self.current_typing_indicator:
             self.current_typing_indicator.stop_animation()
-
-    # Универсальные методы для интерактивного выбора
-    def show_selector(self, items: list, title: str = "Выберите опцию:", callback=None) -> None:
-        """Универсальный метод для показа интерактивного списка"""
-        self.selector_active = True
-        self.selector_index = 0
-        self.selector_items = items
-        self.selector_title = title
-        self.selector_callback = callback
-        
-        # Создаем виджет селектора
-        self.selector_widget = SelectorWidget()
-        self.selector_widget.items = items
-        self.selector_widget.selected_index = 0
-        
-        # Добавляем в чат
-        selector_content = f"**{title}**\n\n"
-        self.user_inputs.append(("Система", selector_content))
-        self.update_chat_display()
-        
-        # Монтируем виджет после обновления чата
-        chat_container = self.query_one("#chat_container")
-        chat_container.mount(self.selector_widget)
-        
-        # Добавляем инструкцию
-        instruction = Static("Используйте ↑↓ для выбора, Enter для подтверждения, Esc для отмены")
-        chat_container.mount(instruction)
-        self.selector_instruction = instruction
-
-    def _update_selector_display(self) -> None:
-        """Обновляет отображение селектора"""
-        if hasattr(self, 'selector_widget') and self.selector_widget:
-            self.selector_widget.selected_index = self.selector_index
-            self.selector_widget.refresh()
-
-    def select_next_item(self) -> None:
-        """Выбирает следующий элемент в списке"""
-        if hasattr(self, 'selector_active') and self.selector_active:
-            self.selector_index = (self.selector_index + 1) % len(self.selector_items)
-            self._update_selector_display()
-
-    def select_previous_item(self) -> None:
-        """Выбирает предыдущий элемент в списке"""
-        if hasattr(self, 'selector_active') and self.selector_active:
-            self.selector_index = (self.selector_index - 1) % len(self.selector_items)
-            self._update_selector_display()
-
-    def confirm_selection(self) -> None:
-        """Подтверждает выбор"""
-        if hasattr(self, 'selector_active') and self.selector_active:
-            selected_item = self.selector_items[self.selector_index]
-            
-            # Удаляем виджеты
-            if hasattr(self, 'selector_widget') and self.selector_widget:
-                self.selector_widget.remove()
-            if hasattr(self, 'selector_instruction') and self.selector_instruction:
-                self.selector_instruction.remove()
-            
-            # Вызываем callback если он есть
-            if self.selector_callback:
-                self.selector_callback(selected_item, self.selector_index)
-            
-            # Сбрасываем селектор
-            self.selector_active = False
-
-    def cancel_selection(self) -> None:
-        """Отменяет выбор"""
-        if hasattr(self, 'selector_active') and self.selector_active:
-            # Удаляем виджеты
-            if hasattr(self, 'selector_widget') and self.selector_widget:
-                self.selector_widget.remove()
-            if hasattr(self, 'selector_instruction') and self.selector_instruction:
-                self.selector_instruction.remove()
-            
-            self.user_inputs.append(("Система", "❌ Выбор отменен"))
-            self.selector_active = False
-            self.update_chat_display()

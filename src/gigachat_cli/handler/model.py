@@ -27,7 +27,7 @@ class ModelHandler:
             model_list = [name for name in self.model_names.values()]
             
             # Показываем селектор с callback для обработки выбора
-            screen.show_selector(
+            screen.selector_manager.show_selector(
                 items=model_list,
                 title="Выберите модель:",
                 callback=self._on_model_selected
