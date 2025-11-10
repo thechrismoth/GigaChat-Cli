@@ -62,6 +62,22 @@ class ChatScreen(Screen):
         self._update_directory_display()
         self.query_one("#command_list", CommandList).add_class("hidden")
 
+    # обработчик случайных нажатий
+    def on_click(self, event: events.Click) -> None:
+        # Если кликнули не на Input и не активен селектор - фокусируем Input
+        if not self.selector_manager.selector_active:
+            input_field = self.query_one("#message_input")
+            # Проверяем по ID виджета
+            if hasattr(event.widget, 'id') and event.widget.id != "message_input":
+                input_field.focus() 
+    
+    # Обработчик проверка фокуса
+    def on_focus(self, event: events.Focus) -> None:
+        # Если фокус ушел с Input и не активен селектор - возвращаем его
+        if not self.selector_manager.selector_active:
+            if event.widget.id != "message_input":
+                self.query_one("#message_input").focus()
+
     def on_input_changed(self, event: Input.Changed) -> None:
         input_field = event.input
         command_list = self.query_one("#command_list", CommandList)
@@ -84,9 +100,12 @@ class ChatScreen(Screen):
         asyncio.create_task(self.process_message())
         command_list.add_class("hidden")
         event.prevent_default()
+        
+        # Возвращаем фокус после отправки сообщения
+        self.query_one("#message_input").focus()
     
+    # Обработчик нажатия клавишь
     def on_key(self, event: events.Key) -> None:
-        """Обрабатывает нажатия клавиш для селектора"""
         if self.selector_manager.selector_active:
             if event.key == "down":
                 self.selector_manager.select_next_item()
@@ -99,7 +118,12 @@ class ChatScreen(Screen):
                 event.prevent_default()
             elif event.key == "escape":
                 self.selector_manager.cancel_selection()
-                event.prevent_default()
+                event.prevent_default() 
+            # Убираем фокус с Input когда активен селектор
+            self.query_one("#message_input").blur()
+        else:
+            # Если не активен селектор - убеждаемся что Input в фокусе
+            self.query_one("#message_input").focus()
     
     # Оработка полученного сообщения
     async def process_message(self) -> None:
@@ -150,9 +174,9 @@ class ChatScreen(Screen):
         current_dir = self.command_utils.get_current_directory()
         dir_widget.current_dir = str(current_dir)
         dir_widget.refresh()
-    
+
+    # Очистка дисплея
     def clear_chat_display(self) -> None:
-        """Полностью очищает визуальное отображение чата"""
         chat_display = self.query_one("#chat_display", Markdown)
         chat_display.update("")
         
@@ -162,8 +186,8 @@ class ChatScreen(Screen):
             if child.id != "chat_display":
                 child.remove()
     
+    # Обновление отображения чата 
     def update_chat_display(self, content: str = "") -> None:
-        """Обновляет отображение чата"""
         chat_display = self.query_one("#chat_display", Markdown)
         chat_display.update(content)
         self.query_one("#chat_container").scroll_end()

@@ -2,7 +2,7 @@ from textual.widgets import Static
 
 from gigachat_cli.widgets.selector import SelectorWidget
 
-# Менеджер управления интерактивными списками
+# Класс по управлению селекторами
 class SelectorManager:
     
     def __init__(self, screen):
@@ -14,8 +14,8 @@ class SelectorManager:
         self.selector_callback = None
         self.selector_widget = None
         self.selector_instruction = None
-   
-    # Функция для показа интерактивного списка
+    
+    # Вывод списка на экран
     def show_selector(self, items: list, title: str = "Выберите опцию:", callback=None) -> None:
         self.selector_active = True
         self.selector_index = 0
@@ -25,6 +25,9 @@ class SelectorManager:
         
         # Очищаем чат перед показом селектора
         self.screen.clear_chat_display()
+        
+        # Убираем фокус с Input
+        self.screen.query_one("#message_input").blur()
         
         # Создаем виджет селектора
         self.selector_widget = SelectorWidget()
@@ -43,35 +46,29 @@ class SelectorManager:
         instruction = Static("Используйте ↑↓ для выбора, Enter для подтверждения, Esc для отмены")
         chat_container.mount(instruction)
         self.selector_instruction = instruction
-    
-    # Обновляем отображение селектора
+
+    # Обновление отображения селектора
     def _update_selector_display(self) -> None:
         if self.selector_widget:
             self.selector_widget.selected_index = self.selector_index
             self.selector_widget.refresh()
     
-    # Следующий  элемент в списке
+    # Выбор следующего элемента
     def select_next_item(self) -> None:
         if self.selector_active:
             self.selector_index = (self.selector_index + 1) % len(self.selector_items)
             self._update_selector_display()
 
-    # Предыдущий элемент в списке
+    # Выбор предыдущего элемента
     def select_previous_item(self) -> None:
         if self.selector_active:
             self.selector_index = (self.selector_index - 1) % len(self.selector_items)
             self._update_selector_display()
-    
+
     # Подтверждение выбора
     def confirm_selection(self) -> None:
         if self.selector_active:
             selected_item = self.selector_items[self.selector_index]
-            
-            # Удаляем виджеты
-            if self.selector_widget:
-                self.selector_widget.remove()
-            if self.selector_instruction:
-                self.selector_instruction.remove()
             
             # Вызываем callback если он есть
             if self.selector_callback:
@@ -79,15 +76,23 @@ class SelectorManager:
             
             # Сбрасываем селектор
             self.selector_active = False
+            
+            # Возвращаем фокус на Input
+            self.screen.query_one("#message_input").focus()
     
     # Отмена выбора
     def cancel_selection(self) -> None:
         if self.selector_active:
-            # Удаляем виджеты
+            # Удаляем виджеты селектора при отмене
             if self.selector_widget:
                 self.selector_widget.remove()
             if self.selector_instruction:
                 self.selector_instruction.remove()
             
+            # Показываем сообщение об отмене
             self.screen.update_chat_display("❌ Выбор отменен")
+            
             self.selector_active = False
+            
+            # Возвращаем фокус на Input
+            self.screen.query_one("#message_input").focus()
