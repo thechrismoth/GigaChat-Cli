@@ -1,6 +1,6 @@
 name: Release
 
-on:      
+on:
   release:
     types: [published, created]
 
@@ -21,9 +21,9 @@ jobs:
           python-version: "3.13"
       
       - name: Install uv
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
       
       - name: Build package
         run: uv build

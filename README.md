@@ -1,12 +1,12 @@
 # GigaChat CLI
 
 [![PyPI Version](https://img.shields.io/pypi/v/gigachat-cli.svg)](https://pypi.org/project/gigachat-cli/)
-[![PyPI - License](https://img.shields.io/pypi/l/gigachat-cli)](https://gitverse.ru/THEChrismoth/GigaChat-Cli/content/master/LICENSE.md)
+[![PyPI - License](https://img.shields.io/pypi/l/gigachat-cli)](https://github.com/thechrismoth/GigaChat-Cli/blob/master/LICENSE.md)
 [![Python Version](https://img.shields.io/pypi/pyversions/gigachat-cli)](https://pypi.org/project/gigachat-cli/)
 
 Текстовый интерфейс для работы с GigaChat AI через командную строку с поддержкой терминальных команд и работы с файлами.
 
-![GigaChat CLI Screenshot](https://gitverse.ru/api/repos/THEChrismoth/GigaChat-Cli/raw/branch/asset/gigachat_menu.jpg)
+![GigaChat CLI Screenshot](https://github.com/thechrismoth/GigaChat-Cli/blob/asset/gigachat_menu.jpg)
 
 ## Особенности
 
@@ -14,8 +14,8 @@
 - **Интерактивный чат** - общайтесь с GigaChat в реальном времени
 - **Автодополнение команд** - умное автодополнение по Tab с описаниями
 - **Выбор моделей** - переключайтесь между GigaChat 2 Lite/Pro/M
-- **Встроенный терминал** - выполняйте системные команды прямо из чата (префикс ёёё!ёёё)
-- **Работа с файлами** - загружайте и анализируйте файлы с помощью команды ёёё/fileёёё
+- **Встроенный терминал** - выполняйте системные команды прямо из чата (префикс **!**)
+- **Работа с файлами** - загружайте и анализируйте файлы с помощью команды **/file**
 - **История диалога** - автоматическое сохранение контекста беседы
 - **Подсветка синтаксиса** - красивый вывод кода и терминальных команд
 
@@ -27,7 +27,7 @@ pip install gigachat-cli
 ```
 ### Установка из исходного кода
 ```
-git clone https://gitverse.ru/THEChrismoth/GigaChat_Cli.git
+git clone https://github.com/thechrismoth/GigaChat-Cli.git
 cd gigachat_cli
 pip install .
 ```
@@ -64,7 +64,7 @@ gigachat
 7. **Работайте с файлами** - используйте **/file имя_файла ваш_запрос**
 8. **Выход** - введите **/exit** чтобы закончить работу приложения
 
-![GigaChat CLI Screenshot](https://gitverse.ru/api/repos/THEChrismoth/GigaChat-Cli/raw/branch/asset/gigachat_work.jpg)
+![GigaChat CLI Screenshot](https://github.com/thechrismoth/GigaChat-Cli/blob/asset/gigachat_work.jpg)
 
 ## Доступные команды
 
