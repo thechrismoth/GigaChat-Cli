@@ -20,18 +20,26 @@ class CommandList(Static):
             self.commands = []
     
     def _update_display(self) -> None:
-        """Обновляет отображение списка команд"""
+        """Обновляет отображение списка команд с описаниями"""
         if not self.commands:
             return
             
+        # Получаем команды с описаниями
+        commands_with_desc = self.screen.list_utils.get_commands_with_descriptions(self.current_input)
+        
         formatted_commands = []
-        for i, cmd in enumerate(self.commands):
+        for i, (cmd, description) in enumerate(commands_with_desc):
             # Убираем / для красивого отображения
             display_cmd = cmd[1:] if cmd.startswith('/') else cmd
+            
+            # Форматируем строку с выравниванием
+            cmd_part = f"{display_cmd:<8}"  # Фиксированная ширина для команд
+            line = f"{cmd_part} - {description}"
+            
             if i == self.selected_index:
-                formatted_commands.append(f"➤ {display_cmd}")
+                formatted_commands.append(f"➤ {line}")
             else:
-                formatted_commands.append(f"  {display_cmd}")
+                formatted_commands.append(f"  {line}")
         
         self.update("\n".join(formatted_commands))
     
@@ -66,8 +74,11 @@ class CommandList(Static):
             else:
                 # Если пробелов нет - заменяем весь текст
                 new_text = selected_cmd
-            
+        
             input_field.value = new_text
             # Ставим курсор в конец
             input_field.cursor_position = len(new_text)
             self.add_class("hidden")
+        
+            # Возвращаем фокус на поле ввода
+            input_field.focus() 

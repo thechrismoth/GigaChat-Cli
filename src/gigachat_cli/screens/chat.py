@@ -14,6 +14,7 @@ from gigachat_cli.utils.list import ListUtils
 from gigachat_cli.utils.selector import SelectorManager
 
 from gigachat_cli.handler.file import FileHandler
+from gigachat_cli.handler.help import HelpHandler 
 from gigachat_cli.handler.model import ModelHandler
 from gigachat_cli.handler.terminal_command import TerminalHandler
 
@@ -39,6 +40,7 @@ class ChatScreen(Screen):
         # Обработчик хендлеров 
         self.handlers =[
             FileHandler(),
+            HelpHandler(),
             ModelHandler(self.cfg, self),
             TerminalHandler(self.command_utils)
         ]        
@@ -137,9 +139,11 @@ class ChatScreen(Screen):
             elif event.key == "enter":
                 command_list.apply_selection(self.query_one("#message_input"))
                 event.prevent_default()
+                self.query_one("#message_input").focus()
             elif event.key == "escape":
                 command_list.add_class("hidden")
                 event.prevent_default()
+                self.query_one("#message_input").focus()
     
     # Оработка полученного сообщения
     async def process_message(self) -> None:
