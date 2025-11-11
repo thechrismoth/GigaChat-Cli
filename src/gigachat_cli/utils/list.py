@@ -5,7 +5,20 @@ class ListUtils:
             "exit": "Выйти из приложения",
             "file": "Работа с файлами", 
             "model": "Выбор модели GigaChat",
-            "help": "Показать справку по командам"
+            "help": "Показать справку по командам",
+            "clear": "Очистить историю чата",
+            "settings": "Настройки приложения",
+            "history": "Показать историю сообщений",
+            "save": "Сохранить текущую сессию",
+            "load": "Загрузить предыдущую сессию",
+            "theme": "Сменить тему интерфейса",
+            "export": "Экспорт истории в файл",
+            "import": "Импорт данных из файла",
+            "search": "Поиск по истории",
+            "undo": "Отменить последнее действие",
+            "redo": "Повторить отмененное действие",
+            "debug": "Режим отладки",
+            "version": "Показать версию приложения"
         }
 
     def get_filtered_commands(self, text: str) -> list[str]:
@@ -14,21 +27,25 @@ class ListUtils:
 
         search_text = text[1:].lower()
         
-        # Возвращаем команды для автодополнения (только названия)
-        return [f"/{cmd}" for cmd in self.commands.keys() if cmd.startswith(search_text)]
+        # Возвращаем ВСЕ подходящие команды (без ограничения)
+        filtered = [f"/{cmd}" for cmd in self.commands.keys() if cmd.startswith(search_text)]
+        filtered.sort()
+        return filtered
     
     def get_commands_with_descriptions(self, text: str) -> list[tuple[str, str]]:
-        """Возвращает список (команда, описание) для отображения"""
         if not text.startswith('/'):
             return []
 
         search_text = text[1:].lower()
         
-        return [
+        # Возвращаем ВСЕ подходящие команды (без ограничения)
+        filtered = [
             (f"/{cmd}", desc) 
             for cmd, desc in self.commands.items() 
             if cmd.startswith(search_text)
         ]
+        filtered.sort(key=lambda x: x[0])
+        return filtered
     
     def should_show_commands(self, text: str) -> bool:
         return text.startswith('/')

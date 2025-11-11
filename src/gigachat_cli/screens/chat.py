@@ -135,9 +135,11 @@ class ChatScreen(Screen):
             if event.key == "tab":
                 command_list.select_next()
                 event.prevent_default()
+                event.stop()
             elif event.key == "shift+tab":
                 command_list.select_previous()
                 event.prevent_default()
+                event.stop()
             elif event.key == "enter":
                 command_list.apply_selection(self.query_one("#message_input"))
                 event.prevent_default()
@@ -146,6 +148,11 @@ class ChatScreen(Screen):
                 command_list.add_class("hidden")
                 event.prevent_default()
                 self.query_one("#message_input").focus()
+        
+        # Обработка TAB когда скрыто автодополнение
+        elif event.key == "tab" and command_list.has_class("hidden"):
+            event.prevent_default()
+            event.stop()
     
     # Оработка полученного сообщения
     async def process_message(self) -> None:
