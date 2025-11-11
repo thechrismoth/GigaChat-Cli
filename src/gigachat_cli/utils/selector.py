@@ -26,8 +26,11 @@ class SelectorManager:
         # Очищаем чат перед показом селектора
         self.screen.clear_chat_display()
         
-        # Убираем фокус с Input
-        self.screen.query_one("#message_input").blur()
+        # Убираем фокус с Input и блокируем imput
+        message_input = self.screen.query_one("#message_input")
+        message_input.disabled = True  # Блокируем ввод
+        message_input.placeholder = ""
+        message_input.blur()
         
         # Создаем виджет селектора
         self.selector_widget = SelectorWidget()
@@ -43,7 +46,7 @@ class SelectorManager:
         chat_container.mount(self.selector_widget)
         
         # Добавляем инструкцию
-        instruction = Static("Используйте ↑↓ для выбора, Enter для подтверждения, Esc для отмены")
+        instruction = Static("\n  Используйте ↑↓ для выбора, Enter для подтверждения, Esc для отмены")
         chat_container.mount(instruction)
         self.selector_instruction = instruction
 
@@ -76,6 +79,12 @@ class SelectorManager:
             if self.selector_instruction:
                 self.selector_instruction.remove()
             
+            # Разблокировка импута
+            message_input = self.screen.query_one("#message_input")
+            message_input.disabled = False
+            message_input.placeholder = "Введите сообщение... (Нажмите Enter для отправки)"
+            message_input.focus()
+            
             # Вызываем callback если он есть
             if self.selector_callback:
                 self.selector_callback(selected_item, self.selector_index)
@@ -94,6 +103,12 @@ class SelectorManager:
                 self.selector_widget.remove()
             if self.selector_instruction:
                 self.selector_instruction.remove()
+
+            # Разблокировка импута
+            message_input = self.screen.query_one("#message_input")
+            message_input.disabled = False
+            message_input.placeholder = "Введите сообщение... (Нажмите Enter для отправки)"
+            message_input.focus()
             
             # Сбрасываем селектор ПЕРЕД показом сообщения
             self.selector_active = False

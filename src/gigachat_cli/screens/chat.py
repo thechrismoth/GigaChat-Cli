@@ -21,6 +21,7 @@ from gigachat_cli.handler.terminal_command import TerminalHandler
 from gigachat_cli.widgets.command_list import CommandList
 from gigachat_cli.widgets.model import Model
 from gigachat_cli.widgets.banner import Banner
+from gigachat_cli.widgets.recommend import Recommend 
 from gigachat_cli.widgets.dir import Dir
 from gigachat_cli.widgets.typing import TypingIndicator
 
@@ -47,6 +48,7 @@ class ChatScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Banner(classes="banner")
+        yield Recommend(classes="recommend")
         with VerticalScroll(id="chat_container"):
             yield Markdown("", id="chat_display")
         yield CommandList(id="command_list", classes="hidden") 

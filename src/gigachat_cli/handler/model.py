@@ -1,5 +1,3 @@
-import re
-
 from textual.widgets import Input
 
 from gigachat_cli.utils.config import Config

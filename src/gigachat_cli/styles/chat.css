@@ -40,4 +40,8 @@
     display: none;
 }
 
-
+#message_input:disabled {
+    background: $surface;
+    color: $text-muted;
+    border: round $background;
+}
