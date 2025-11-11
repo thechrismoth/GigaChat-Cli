@@ -16,5 +16,5 @@ class Banner(Static):
                        ░░██████                                                       
                         ░░░░░░                                                        
         """
-
+        
         return ASCII_ART

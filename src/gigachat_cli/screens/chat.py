@@ -2,7 +2,7 @@ import importlib.resources
 import asyncio
 
 from textual.app import ComposeResult
-from textual.widgets import TextArea, Markdown
+from textual.widgets import Input, Markdown
 from textual.screen import Screen
 from textual.containers import VerticalScroll, Horizontal
 from textual import events
@@ -11,15 +11,17 @@ from gigachat_cli.utils.config import Config
 from gigachat_cli.utils.core import get_answer
 from gigachat_cli.utils.command import CommandUtils
 from gigachat_cli.utils.list import ListUtils
-from gigachat_cli.utils.config import Config
+from gigachat_cli.utils.selector import SelectorManager
 
 from gigachat_cli.handler.file import FileHandler
+from gigachat_cli.handler.help import HelpHandler 
 from gigachat_cli.handler.model import ModelHandler
 from gigachat_cli.handler.terminal_command import TerminalHandler
 
 from gigachat_cli.widgets.command_list import CommandList
 from gigachat_cli.widgets.model import Model
 from gigachat_cli.widgets.banner import Banner
+from gigachat_cli.widgets.recommend import Recommend 
 from gigachat_cli.widgets.dir import Dir
 from gigachat_cli.widgets.typing import TypingIndicator
 
@@ -32,20 +34,26 @@ class ChatScreen(Screen):
         self.command_utils = CommandUtils()
         self.list_utils = ListUtils()
         self.cfg = Config()
+        
+        # Менеджер селекторов
+        self.selector_manager = SelectorManager(self)
+        
         # Обработчик хендлеров 
         self.handlers =[
             FileHandler(),
-            ModelHandler(self.cfg),
+            HelpHandler(),
+            ModelHandler(self.cfg, self),
             TerminalHandler(self.command_utils)
         ]        
 
     def compose(self) -> ComposeResult:
         yield Banner(classes="banner")
+        yield Recommend(classes="recommend")
         with VerticalScroll(id="chat_container"):
             yield Markdown("", id="chat_display")
         yield CommandList(id="command_list", classes="hidden") 
-        yield TextArea(
-            placeholder="Введите сообщение... (Используйте Shift+Enter для отправки)", 
+        yield Input(
+            placeholder="Введите сообщение... (Нажмите Enter для отправки)", 
             id="message_input"
         )
         with Horizontal(classes="status_bar"):
@@ -53,35 +61,103 @@ class ChatScreen(Screen):
             yield Model(classes="model")
 
     def on_mount(self) -> None:
-        self.user_inputs = [] 
         self.current_typing_indicator = None
         self.query_one("#message_input").focus()
         self._update_directory_display()
         self.query_one("#command_list", CommandList).add_class("hidden")
 
-    def on_text_area_changed(self, event: TextArea.Changed) -> None:
-        text_area = event.text_area
+    # обработчик случайных нажатий
+    def on_click(self, event: events.Click) -> None:
+        # Если кликнули не на Input и не активен селектор - фокусируем Input
+        if not self.selector_manager.selector_active:
+            input_field = self.query_one("#message_input")
+            # Проверяем по ID виджета
+            if hasattr(event.widget, 'id') and event.widget.id != "message_input":
+                input_field.focus() 
+    
+    # Обработчик проверка фокуса
+    def on_focus(self, event: events.Focus) -> None:
+        # Если фокус ушел с Input и не активен селектор - возвращаем его
+        if not self.selector_manager.selector_active:
+            if event.widget.id != "message_input":
+                self.query_one("#message_input").focus()
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        input_field = event.input
         command_list = self.query_one("#command_list", CommandList)
 
-        if self.list_utils.should_show_commands(text_area.text):
-            filtered_commands = self.list_utils.get_filtered_commands(text_area.text)
-            command_list.update_commands(filtered_commands)
+        if self.list_utils.should_show_commands(input_field.value):
+            filtered_commands = self.list_utils.get_filtered_commands(input_field.value)
+            command_list.update_commands(filtered_commands, input_field.value)
 
         else:
             command_list.add_class("hidden")
     
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        command_list = self.query_one("#command_list", CommandList)
+        
+        # Если активен селектор, не обрабатываем обычный Enter
+        if self.selector_manager.selector_active:
+            event.prevent_default()
+            return
+
+        elif not command_list.has_class("hidden"):
+            command_list.apply_selection(event.input)
+            event.prevent_default()
+            return
+            
+        asyncio.create_task(self.process_message())
+        command_list.add_class("hidden")
+        event.prevent_default()
+        
+        # Возвращаем фокус после отправки сообщения
+        self.query_one("#message_input").focus()
+    
+    # Обработчик нажатия клавишь
     def on_key(self, event: events.Key) -> None:
         command_list = self.query_one("#command_list", CommandList)
 
-        if event.key == "shift+enter":
-            asyncio.create_task(self.process_message())
-            command_list.add_class("hidden")
-            event.prevent_default() 
+        if self.selector_manager.selector_active:
+            if event.key == "down":
+                self.selector_manager.select_next_item()
+                event.prevent_default()
+            elif event.key == "up":
+                self.selector_manager.select_previous_item()
+                event.prevent_default()
+            elif event.key == "enter":
+                self.selector_manager.confirm_selection()
+                event.prevent_default()
+            elif event.key == "escape":
+                self.selector_manager.cancel_selection()
+                event.prevent_default() 
+
+        elif not command_list.has_class("hidden"):
+            if event.key == "tab":
+                command_list.select_next()
+                event.prevent_default()
+                event.stop()
+            elif event.key == "shift+tab":
+                command_list.select_previous()
+                event.prevent_default()
+                event.stop()
+            elif event.key == "enter":
+                command_list.apply_selection(self.query_one("#message_input"))
+                event.prevent_default()
+                self.query_one("#message_input").focus()
+            elif event.key == "escape":
+                command_list.add_class("hidden")
+                event.prevent_default()
+                self.query_one("#message_input").focus()
+        
+        # Обработка TAB когда скрыто автодополнение
+        elif event.key == "tab" and command_list.has_class("hidden"):
+            event.prevent_default()
+            event.stop()
     
     # Оработка полученного сообщения
     async def process_message(self) -> None:
-        text_area = self.query_one("#message_input", TextArea)
-        user_text = text_area.text.strip()
+        input_field = self.query_one("#message_input", Input)
+        user_text = input_field.value.strip()
 
         if not user_text:
             return
@@ -91,17 +167,20 @@ class ChatScreen(Screen):
             self.app.exit("Результат работы")
             return
         
+        # Очищаем визуальный вывод перед новым сообщением
+        self.clear_chat_display()
+        
         for handle in self.handlers:
-            if await handle.handle(user_text,text_area, self):
+            if await handle.handle(user_text, input_field, self):
                 return
         
         # Вызов обработки обращения к API GigaChat
-        await self.handle_gigachat_message(user_text, text_area)
+        await self.handle_gigachat_message(user_text, input_field)
     
     # Обработка сообщений к API
-    async def handle_gigachat_message(self, user_text: str, text_area: TextArea) -> None:
-        self.user_inputs.append(("Вы", user_text))
-        self.update_chat_display()
+    async def handle_gigachat_message(self, user_text: str, input_field: Input) -> None:
+        # Показываем вопрос пользователя
+        self.update_chat_display(f"**Вы:** {user_text}")
 
         self.current_typing_indicator = TypingIndicator()
         chat_container = self.query_one("#chat_container")
@@ -109,8 +188,8 @@ class ChatScreen(Screen):
 
         asyncio.create_task(self.get_bot_response(user_text))
         
-        text_area.text = ""
-        text_area.focus()
+        input_field.value = ""
+        input_field.focus()
 
     def _update_model_display(self) -> None:
         model_widget = self.query_one(Model)
@@ -123,22 +202,23 @@ class ChatScreen(Screen):
         dir_widget = self.query_one(Dir)
         current_dir = self.command_utils.get_current_directory()
         dir_widget.current_dir = str(current_dir)
-        dir_widget.refresh()    
-        
-    # Обновляем отображение чата
-    def update_chat_display(self) -> None:
-        output_lines = []
-        for sender, text in self.user_inputs:
-            if sender == "Вы":
-                output_lines.append(f"**{sender}:** {text}")
-            else:
-                output_lines.append(f"**{sender}:**\n\n{text}")
-        
-        output = "\n\n".join(output_lines)
-        
-        chat_display = self.query_one("#chat_display", Markdown)
-        chat_display.update(output)
+        dir_widget.refresh()
 
+    # Очистка дисплея
+    def clear_chat_display(self) -> None:
+        chat_display = self.query_one("#chat_display", Markdown)
+        chat_display.update("")
+        
+        # Очищаем все дополнительные виджеты в контейнере чата
+        chat_container = self.query_one("#chat_container")
+        for child in chat_container.children:
+            if child.id != "chat_display":
+                child.remove()
+    
+    # Обновление отображения чата 
+    def update_chat_display(self, content: str = "") -> None:
+        chat_display = self.query_one("#chat_display", Markdown)
+        chat_display.update(content)
         self.query_one("#chat_container").scroll_end()
     
     # Получаем ответ и выводим на экран
@@ -151,22 +231,16 @@ class ChatScreen(Screen):
                 self.current_typing_indicator.remove()
                 self.current_typing_indicator = None
             
-            self.user_inputs.append(("GigaChat", bot_response))
-            
-            if len(self.user_inputs) > 10:
-                self.user_inputs = self.user_inputs[-10:]
-            
-            self.update_chat_display()
+            # Показываем вопрос + ответ
+            self.update_chat_display(f"**Вы:** {user_text}\n\n**GigaChat:**\n\n{bot_response}")
             
         except Exception as e:
             if self.current_typing_indicator:
                 self.current_typing_indicator.stop_animation()
                 self.current_typing_indicator.remove()
                 self.current_typing_indicator = None
-            self.user_inputs.append(("GigaChat", f"**Ошибка:** {str(e)}"))
-            self.update_chat_display()
+            self.update_chat_display(f"**Вы:** {user_text}\n\n**GigaChat:**\n\n**Ошибка:** {str(e)}")
     
     def on_unmount(self) -> None:
         if self.current_typing_indicator:
             self.current_typing_indicator.stop_animation()
-

@@ -1,58 +1,53 @@
-import re
-
-from textual.widgets import TextArea
+from textual.widgets import Input
 
 from gigachat_cli.utils.config import Config
 
 # Хендлер обработки команды /model
 class ModelHandler:
-    def __init__(self, cfg: Config):
+    def __init__(self, cfg: Config, screen=None):
         self.cfg = cfg
+        self.screen = screen
         self.model_names = {
             "GigaChat-2": "GigaChat 2 Lite",
             "GigaChat-2-Pro": "GigaChat 2 Pro", 
             "GigaChat-2-Max": "GigaChat 2 Max",
         }
 
-    async def handle(self, user_text: str, text_area: TextArea, screen):
+    async def handle(self, user_text: str, input_field: Input, screen):
         if not user_text.lower().startswith('/model'):
             return False
 
-        if user_text.strip() == '/model':
-            model_list = "\n\n".join([f"• {key}: {value}" for key, value in self.model_names.items()]) 
-            screen.user_inputs.append(("Система", f"**Доступные модели:**\n\n{model_list}"))
-
-            screen.update_chat_display()
+        # Чат уже очищен в process_message, просто показываем результат
         
-            # Очищаем поле ввода
-            text_area = screen.query_one("#message_input", TextArea)
-            text_area.text = ""
-            text_area.focus()
-
+        if user_text.strip() == '/model':
+            # Показываем селектор моделей
+            model_list = [name for name in self.model_names.values()]
+            
+            screen.selector_manager.show_selector(
+                items=model_list,
+                title="Выберите модель:",
+                callback=self._on_model_selected
+            )
+            
+            input_field.value = ""
+            input_field.focus()
             return True
-        else:
-            # Если есть аргументы - обрабатываем выбор модели
-            match = re.match(r'/model\s+(.+)', user_text) 
-            if match:
-                model_key = match.group(1).strip()
-                model_names = self.model_names
-
-                if model_key in model_names:
-                    self.cfg.set_model(model_key)
-                    screen.user_inputs.append(("Система", f"Выбрана модель: {model_names[model_key]}"))
-                    
-                else:
-                    screen.user_inputs.append(("Система", f"Модель '{model_key}' не найдена. Используйте /model для просмотра списка."))
-                
-                screen._update_model_display()
-                screen.update_chat_display()
-
-                # Очищаем поле ввода
-                text_area = screen.query_one("#message_input", TextArea)
-                text_area.text = ""
-                text_area.focus()
-
-                return True
-
+ 
         return False
 
+    # Вызываем Callback когда произведен выбор из списка
+    def _on_model_selected(self, selected_item: str, index: int):
+        # Находим ключ модели по названию
+        model_key = None
+        for key, name in self.model_names.items():
+            if name == selected_item:
+                model_key = key
+                break
+        
+        if model_key:
+            # Устанавливаем выбранную модель
+            self.cfg.set_model(model_key)
+            
+            # Показываем результат выбора
+            self.screen.update_chat_display(f"**Система:** ✅ Выбрана модель: **{selected_item}**")
+            self.screen._update_model_display()

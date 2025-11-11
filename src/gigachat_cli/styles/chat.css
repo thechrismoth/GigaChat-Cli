@@ -30,12 +30,18 @@
 }
 
 #message_input {
-  border: none !important;
+  border: round green;
   background: transparent !important;
   outline: none !important;
-  height: 4;
+  height: 3;
 }
 
 .hidden {
     display: none;
+}
+
+#message_input:disabled {
+    background: $surface;
+    color: $text-muted;
+    border: round $background;
 }
