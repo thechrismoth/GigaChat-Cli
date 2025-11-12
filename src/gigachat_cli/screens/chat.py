@@ -12,13 +12,14 @@ from gigachat_cli.utils.core import get_answer
 from gigachat_cli.utils.command import CommandUtils
 from gigachat_cli.utils.list import ListUtils
 from gigachat_cli.utils.selector import SelectorManager
+from gigachat_cli.utils.file import FileUtils
 
-from gigachat_cli.handler.file import FileHandler
 from gigachat_cli.handler.help import HelpHandler 
 from gigachat_cli.handler.model import ModelHandler
 from gigachat_cli.handler.terminal_command import TerminalHandler
 
 from gigachat_cli.widgets.command_list import CommandList
+from gigachat_cli.widgets.file_list import FileList
 from gigachat_cli.widgets.model import Model
 from gigachat_cli.widgets.banner import Banner
 from gigachat_cli.widgets.recommend import Recommend 
@@ -33,6 +34,7 @@ class ChatScreen(Screen):
         # Обработчики утилит
         self.command_utils = CommandUtils()
         self.list_utils = ListUtils()
+        self.file_utils = FileUtils(self.command_utils)
         self.cfg = Config()
         
         # Менеджер селекторов
@@ -40,7 +42,6 @@ class ChatScreen(Screen):
         
         # Обработчик хендлеров 
         self.handlers =[
-            FileHandler(),
             HelpHandler(),
             ModelHandler(self.cfg, self),
             TerminalHandler(self.command_utils)
@@ -52,6 +53,7 @@ class ChatScreen(Screen):
         with VerticalScroll(id="chat_container"):
             yield Markdown("", id="chat_display")
         yield CommandList(id="command_list", classes="hidden") 
+        yield FileList(id="file_list", classes="hidden")
         yield Input(
             placeholder="Введите сообщение... (Нажмите Enter для отправки)", 
             id="message_input"
@@ -65,6 +67,7 @@ class ChatScreen(Screen):
         self.query_one("#message_input").focus()
         self._update_directory_display()
         self.query_one("#command_list", CommandList).add_class("hidden")
+        self.query_one("#file_list", FileList).add_class("hidden")
 
     # обработчик случайных нажатий
     def on_click(self, event: events.Click) -> None:
@@ -85,16 +88,30 @@ class ChatScreen(Screen):
     def on_input_changed(self, event: Input.Changed) -> None:
         input_field = event.input
         command_list = self.query_one("#command_list", CommandList)
+        file_list = self.query_one("#file_list", FileList)
 
+        # Сначала проверяем команды
         if self.list_utils.should_show_commands(input_field.value):
             filtered_commands = self.list_utils.get_filtered_commands(input_field.value)
             command_list.update_commands(filtered_commands, input_field.value)
+            file_list.add_class("hidden")  # Скрываем файловый список
+
+        # Затем проверяем файлы для терминальных команд
+        elif self.file_utils.should_show_files(input_field.value):
+            files, current_command, current_path = self.file_utils.get_files_for_completion(input_field.value)
+            if files:
+                file_list.update_files(files, current_command, current_path)
+                command_list.add_class("hidden")  # Скрываем командный список
+            else:
+                file_list.add_class("hidden")
 
         else:
             command_list.add_class("hidden")
+            file_list.add_class("hidden")
     
     def on_input_submitted(self, event: Input.Submitted) -> None:
         command_list = self.query_one("#command_list", CommandList)
+        file_list = self.query_one("#file_list", FileList)
         
         # Если активен селектор, не обрабатываем обычный Enter
         if self.selector_manager.selector_active:
@@ -105,9 +122,15 @@ class ChatScreen(Screen):
             command_list.apply_selection(event.input)
             event.prevent_default()
             return
+        
+        elif not file_list.has_class("hidden"):
+            file_list.apply_selection(event.input)
+            event.prevent_default()  # Важно: предотвращаем отправку команды
+            return
             
         asyncio.create_task(self.process_message())
         command_list.add_class("hidden")
+        file_list.add_class("hidden")
         event.prevent_default()
         
         # Возвращаем фокус после отправки сообщения
@@ -116,6 +139,7 @@ class ChatScreen(Screen):
     # Обработчик нажатия клавишь
     def on_key(self, event: events.Key) -> None:
         command_list = self.query_one("#command_list", CommandList)
+        file_list = self.query_one("#file_list", FileList)
 
         if self.selector_manager.selector_active:
             if event.key == "down":
@@ -149,8 +173,27 @@ class ChatScreen(Screen):
                 event.prevent_default()
                 self.query_one("#message_input").focus()
         
+        # Обработка для file_list
+        elif not file_list.has_class("hidden"):
+            if event.key == "tab":
+                file_list.select_next()
+                event.prevent_default()
+                event.stop()
+            elif event.key == "shift+tab":
+                file_list.select_previous()
+                event.prevent_default()
+                event.stop()
+            elif event.key == "enter":
+                file_list.apply_selection(self.query_one("#message_input"))
+                event.prevent_default()
+                self.query_one("#message_input").focus()
+            elif event.key == "escape":
+                file_list.add_class("hidden")
+                event.prevent_default()
+                self.query_one("#message_input").focus()
+        
         # Обработка TAB когда скрыто автодополнение
-        elif event.key == "tab" and command_list.has_class("hidden"):
+        elif event.key == "tab" and command_list.has_class("hidden") and file_list.has_class("hidden"):
             event.prevent_default()
             event.stop()
     

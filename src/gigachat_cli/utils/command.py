@@ -4,11 +4,12 @@ import os
 from pathlib import Path
 from typing import Tuple, Optional
 
-# Обработчик терминальных команд
 class CommandUtils:
     
     def __init__(self):
         self.current_directory = Path.cwd()
+        # Список команд, работающих с файловой системой
+        self.file_commands = ['cd', 'ls', 'cp', 'mv', 'rm', 'mkdir', 'cat', 'touch', 'find', 'grep']
     
     #Выполняем системную команду и возвращаем результат 
     async def execute_system_command(self, command: str) -> Tuple[bool, str, int]: 
@@ -111,3 +112,10 @@ class CommandUtils:
             f"```\n{output}\n```\n"
             f"**{status_text}**"
         )
+    
+    def is_file_command(self, command: str) -> bool:
+        """Проверяет, является ли команда файловой"""
+        command_parts = command.split()
+        if not command_parts:
+            return False
+        return command_parts[0] in self.file_commands

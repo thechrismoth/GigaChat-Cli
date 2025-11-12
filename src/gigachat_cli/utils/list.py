@@ -3,7 +3,6 @@ class ListUtils:
     def __init__(self):
         self.commands = {
             "exit": "Выйти из приложения",
-            "file": "Работа с файлами", 
             "model": "Выбор модели GigaChat",
             "help": "Показать справку по командам"
         }
