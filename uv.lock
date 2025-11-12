@@ -97,8 +97,7 @@ wheels = [
 
 [[package]]
 name = "gigachat-cli"
-version = "2.2.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "aiofiles" },
     { name = "asyncio" },
