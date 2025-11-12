@@ -209,7 +209,10 @@ class ChatScreen(Screen):
         if user_text.lower().startswith('/exit'):
             self.app.exit("Результат работы")
             return
-        
+
+        if user_text.lower().startswith('/menu'):
+             self.app.pop_screen()
+         
         # Очищаем визуальный вывод перед новым сообщением
         self.clear_chat_display()
         
