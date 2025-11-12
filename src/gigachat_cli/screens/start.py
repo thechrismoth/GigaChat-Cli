@@ -30,7 +30,7 @@ class MenuApp(Screen):
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         choice = event.item.id
         if choice == "start":
-            self.app.switch_screen(ChatScreen())  
+            self.app.push_screen(ChatScreen())  
         elif choice == "help":
             self.app.push_screen(HelpScreen())
         elif choice == "exit":
