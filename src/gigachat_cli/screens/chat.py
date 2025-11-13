@@ -53,6 +53,8 @@ class ChatScreen(Screen):
         self.current_stream_task: Optional[asyncio.Task] = None
         self.current_response_content: str = ""
         self.is_processing_stream: bool = False
+        self.last_user_message: str = ""
+        self.conversation_context: list = []  # Сохраняем контекст диалога
 
     def compose(self) -> ComposeResult:
         yield Banner(classes="banner")
@@ -73,15 +75,13 @@ class ChatScreen(Screen):
         self.current_typing_indicator = None
         self.query_one("#message_input").focus()
         self._update_directory_display()
-        self._update_model_display()  # Добавляем обновление модели при монтировании
+        self._update_model_display()
         self.query_one("#command_list", CommandList).add_class("hidden")
         self.query_one("#file_list", FileList).add_class("hidden")
 
     def on_unmount(self) -> None:
         """Очистка ресурсов при размонтировании экрана"""
         self._cleanup_stream_processing()
-        if self.current_typing_indicator:
-            self.current_typing_indicator.stop_animation()
 
     def _cleanup_stream_processing(self):
         """Очистка потоковой обработки"""
@@ -89,19 +89,24 @@ class ChatScreen(Screen):
             self.current_stream_task.cancel()
         self.is_processing_stream = False
         self.current_response_content = ""
+        self._hide_typing_indicator()
+
+    def _hide_typing_indicator(self):
+        """Скрытие индикатора набора"""
+        if self.current_typing_indicator:
+            self.current_typing_indicator.stop_animation()
+            self.current_typing_indicator.remove()
+            self.current_typing_indicator = None
 
     # обработчик случайных нажатий
     def on_click(self, event: events.Click) -> None:
-        # Если кликнули не на Input и не активен селектор - фокусируем Input
         if not self.selector_manager.selector_active:
             input_field = self.query_one("#message_input")
-            # Проверяем по ID виджета
             if hasattr(event.widget, 'id') and event.widget.id != "message_input":
                 input_field.focus() 
     
     # Обработчик проверка фокуса
     def on_focus(self, event: events.Focus) -> None:
-        # Если фокус ушел с Input и не активен селектор - возвращаем его
         if not self.selector_manager.selector_active:
             if event.widget.id != "message_input":
                 self.query_one("#message_input").focus()
@@ -115,14 +120,14 @@ class ChatScreen(Screen):
         if self.list_utils.should_show_commands(input_field.value):
             filtered_commands = self.list_utils.get_filtered_commands(input_field.value)
             command_list.update_commands(filtered_commands, input_field.value)
-            file_list.add_class("hidden")  # Скрываем файловый список
+            file_list.add_class("hidden")
 
         # Затем проверяем файлы для терминальных команд
         elif self.file_utils.should_show_files(input_field.value):
             files, current_command, current_path = self.file_utils.get_files_for_completion(input_field.value)
             if files:
                 file_list.update_files(files, current_command, current_path)
-                command_list.add_class("hidden")  # Скрываем командный список
+                command_list.add_class("hidden")
             else:
                 file_list.add_class("hidden")
 
@@ -146,7 +151,7 @@ class ChatScreen(Screen):
         
         elif not file_list.has_class("hidden"):
             file_list.apply_selection(event.input)
-            event.prevent_default()  # Важно: предотвращаем отправку команды
+            event.prevent_default()
             return
             
         # Если идет потоковая обработка, не обрабатываем новое сообщение
@@ -226,7 +231,7 @@ class ChatScreen(Screen):
         # Обработка Ctrl+C для отмены потоковой обработки
         elif event.key == "ctrl+c" and self.is_processing_stream:
             self._cleanup_stream_processing()
-            self.update_chat_display(f"**Вы:** {self.query_one('#message_input').value}\n\n**GigaChat:**\n\n*Запрос отменен пользователем*")
+            self.update_chat_display(f"**Вы:** {self.last_user_message}\n\n**GigaChat:**\n\n*Запрос отменен пользователем*")
             event.prevent_default()
     
     # Оработка полученного сообщения
@@ -236,6 +241,9 @@ class ChatScreen(Screen):
 
         if not user_text:
             return
+        
+        # Сохраняем сообщение пользователя
+        self.last_user_message = user_text
         
         # Выход из приложения
         if user_text.lower().startswith('/exit'):
@@ -249,6 +257,11 @@ class ChatScreen(Screen):
         # Очищаем визуальный вывод перед новым сообщением
         self.clear_chat_display()
         
+        # Сохраняем контекст диалога
+        self.conversation_context.append(f"Пользователь: {user_text}")
+        if len(self.conversation_context) > 6:  # Ограничиваем контекст
+            self.conversation_context = self.conversation_context[-6:]
+        
         # Проверяем обработчики команд
         for handler in self.handlers:
             if await handler.handle(user_text, input_field, self):
@@ -259,18 +272,19 @@ class ChatScreen(Screen):
     
     # Обработка сообщений к API
     async def handle_gigachat_message(self, user_text: str, input_field: Input) -> None:
-        # Показываем вопрос пользователя
+        # НЕМЕДЛЕННО очищаем поле ввода и показываем сообщение пользователя
+        input_field.value = ""
         self.update_chat_display(f"**Вы:** {user_text}")
-
-        # Создаем индикатор набора
+        
+        # НЕМЕДЛЕННО создаем и показываем индикатор набора
         self.current_typing_indicator = TypingIndicator()
         chat_container = self.query_one("#chat_container")
         chat_container.mount(self.current_typing_indicator)
-
-        # Запускаем потоковую обработку
+        
+        # НЕМЕДЛЕННО запускаем потоковую обработку
+        self.is_processing_stream = True
         self.current_stream_task = asyncio.create_task(self.get_bot_response_stream(user_text))
         
-        input_field.value = ""
         input_field.focus()
 
     def _update_model_display(self) -> None:
@@ -312,15 +326,23 @@ class ChatScreen(Screen):
     # Получаем ответ и выводим на экран (потоковая версия)
     async def get_bot_response_stream(self, user_text: str) -> None:
         """Потоковое получение ответа от GigaChat"""
-        self.is_processing_stream = True
         self.current_response_content = ""
         
         try:
-            # Показываем начальное сообщение
-            self.update_chat_display_stream(user_text, "*Начинаю генерировать ответ...*")
+            # НЕМЕДЛЕННО показываем пустой ответ чтобы начать поток
+            self.update_chat_display_stream(user_text, "")
+            
+            first_chunk_received = False
+            start_time = asyncio.get_event_loop().time()
             
             # Получаем потоковый ответ
             async for chunk in get_answer_stream(user_text):
+                # Если это первый чанк, измеряем время отклика
+                if not first_chunk_received:
+                    first_chunk_received = True
+                    response_time = asyncio.get_event_loop().time() - start_time
+                    print(f"First chunk received after: {response_time:.2f} seconds")
+                
                 if chunk.content:
                     self.current_response_content += chunk.content
                     # Обновляем отображение в реальном времени
@@ -343,19 +365,14 @@ class ChatScreen(Screen):
         except Exception as e:
             await self._handle_stream_error(user_text, f"**Неизвестная ошибка:** {str(e)}")
         finally:
-            self._cleanup_stream_processing()
+            self.is_processing_stream = False
+            self.current_response_content = ""
             self._hide_typing_indicator()
 
     async def _handle_stream_error(self, user_text: str, error_message: str):
         """Обработка ошибок потоковой обработки"""
         self.update_chat_display_stream(user_text, error_message)
-        self._cleanup_stream_processing()
+        self.is_processing_stream = False
+        self.current_response_content = ""
         self._hide_typing_indicator()
-
-    def _hide_typing_indicator(self):
-        """Скрытие индикатора набора"""
-        if self.current_typing_indicator:
-            self.current_typing_indicator.stop_animation()
-            self.current_typing_indicator.remove()
-            self.current_typing_indicator = None
 
