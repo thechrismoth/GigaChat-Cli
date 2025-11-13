@@ -8,6 +8,7 @@ from textual import events
 
 from gigachat_cli.widgets.banner import Banner
 
+# Контент руководства пользователя
 HELP_CONTENT = """
 # 🚀 Руководство пользователя GigaChat
 
@@ -59,18 +60,29 @@ export GIGACHAT_API_KEY="YOUR_API_KEY"
 """
 
 class HelpScreen(Screen):
+    """Экран справки с руководством пользователя"""
+    
     CSS = importlib.resources.files("gigachat_cli.styles").joinpath("help.css").read_text()
 
-
     def compose(self) -> ComposeResult:
+        """
+        Композиция виджетов экрана справки
+        
+        Returns:
+            ComposeResult: Вертикальный скролл с баннером и содержимым справки
+        """
         yield VerticalScroll(
             Banner(),
             Markdown(HELP_CONTENT)
         )
     
-    #обработка комбинации для отправки сообщения 
     def on_key(self, event: events.Key) -> None:
-         if event.key == "escape":
+        """
+        Обработчик нажатия клавиш на экране справки
+        
+        Args:
+            event: Событие нажатия клавиши
+        """
+        if event.key == "escape":
+            # Возврат в предыдущий экран при нажатии Escape
             self.app.pop_screen()
-
-   

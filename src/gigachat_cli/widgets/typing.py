@@ -3,9 +3,16 @@ from textual.widgets import Static
 
 
 class TypingIndicator(Static):
-    """Индикатор набора сообщения (только точки)"""
+    """Индикатор набора сообщения"""
     
     def __init__(self):
+        """
+        Инициализация индикатора набора
+        
+        Args:
+            *args: Аргументы родительского класса
+            **kwargs: Ключевые аргументы родительского класса
+        """
         super().__init__(".")
         self._is_animating = False
         self._animation_task = None

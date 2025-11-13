@@ -1,13 +1,20 @@
 from textual.widgets import Static
 from textual.reactive import reactive
 
-# Виджет для интерактивного выбора с цветовым выделением
+
 class SelectorWidget(Static):
+    """Виджет для интерактивного выбора с цветовым выделением"""
 
     items = reactive([])
     selected_index = reactive(0)
     
     def render(self) -> str:
+        """
+        Рендеринг списка элементов с выделением выбранного
+        
+        Returns:
+            str: Отформатированный список элементов с цветовым выделением
+        """
         if not self.items:
             return ""
             
