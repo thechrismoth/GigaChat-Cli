@@ -1,10 +1,26 @@
 import os
 from textual.widgets import Static
 
+
 class Dir(Static):
+    """Виджет отображения текущей рабочей директории"""
+    
     def __init__(self, *args, **kwargs):
+        """
+        Инициализация виджета директории
+        
+        Args:
+            *args: Аргументы родительского класса
+            **kwargs: Ключевые аргументы родительского класса
+        """
         super().__init__(*args, **kwargs)
         self.current_dir = os.path.abspath(os.curdir)
     
     def render(self) -> str:
+        """
+        Рендеринг текста с текущей директорией
+        
+        Returns:
+            str: Отформатированная строка с иконкой и путем директории
+        """
         return f"📁 Директория: {self.current_dir}"

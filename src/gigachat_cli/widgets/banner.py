@@ -1,8 +1,16 @@
 from textual.widgets import Static
 
+
 class Banner(Static):
-    def render(self) -> str:
+    """Виджет баннера с ASCII-артом GigaChat"""
     
+    def render(self) -> str:
+        """
+        Рендеринг ASCII-арта баннера
+        
+        Returns:
+            str: ASCII-арт в виде строки
+        """
         ASCII_ART = r"""   
        █████████   ███                       █████████  █████                 █████   
       ███░░░░░███ ░░░                       ███░░░░░███░░███                 ░░███    

@@ -22,11 +22,13 @@
   text-align: right;
 }
 
-.typing-indicator {
-  color: $warning;
-  text-style: italic;
-  height: auto;
-  margin: 1 0;
+.typing {
+    color: #888;
+    text-style: italic;
+    height: 1;
+    margin: 0;
+    padding: 0;
+    text-align: left;
 }
 
 #message_input {

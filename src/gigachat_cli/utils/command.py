@@ -4,15 +4,26 @@ import os
 from pathlib import Path
 from typing import Tuple, Optional
 
+
 class CommandUtils:
+    """Утилита для выполнения системных команд и работы с файловой системой"""
     
     def __init__(self):
+        """Инициализация утилиты команд"""
         self.current_directory = Path.cwd()
         # Список команд, работающих с файловой системой
         self.file_commands = ['cd', 'ls', 'cp', 'mv', 'rm', 'mkdir', 'cat', 'touch', 'find', 'grep']
     
-    #Выполняем системную команду и возвращаем результат 
-    async def execute_system_command(self, command: str) -> Tuple[bool, str, int]: 
+    async def execute_system_command(self, command: str) -> Tuple[bool, str, int]:
+        """
+        Выполнение системной команды и возврат результата
+        
+        Args:
+            command: Строка команды для выполнения
+            
+        Returns:
+            Tuple[bool, str, int]: (успех, вывод, код возврата)
+        """
         if not command.strip():
             return False, "Пустая команда", 1
         
@@ -36,11 +47,11 @@ class CommandUtils:
                 cwd=self.current_directory
             )
             
-            # Читаем вывод
+            # Читаем вывод команды
             stdout, stderr = await process.communicate()
             return_code = await process.wait()
             
-            # Формируем результат
+            # Формируем результат выполнения
             output_lines = []
             
             if stdout:
@@ -58,8 +69,16 @@ class CommandUtils:
         except Exception as e:
             return False, f"Ошибка выполнения: {e}", 1
     
-    # Отдельно обрабатываем команду cd
     async def _handle_cd_command(self, command: str) -> Tuple[bool, str, int]:
+        """
+        Обработка команды смены директории
+        
+        Args:
+            command: Команда cd с аргументами
+            
+        Returns:
+            Tuple[bool, str, int]: (успех, сообщение, код возврата)
+        """
         try:
             args = shlex.split(command)
             if len(args) < 2:
@@ -91,21 +110,44 @@ class CommandUtils:
         except Exception as e:
             return False, f"cd: ошибка: {e}", 1
     
-    #Возвращаем текущую дирректорию
     def get_current_directory(self) -> Path:
+        """
+        Получение текущей рабочей директории
+        
+        Returns:
+            Path: Текущая директория
+        """
         return self.current_directory
     
-    #Провека являетя ли текст консольной командой
     @staticmethod
-    def is_terminal_command(text: str) -> Tuple[bool, Optional[str]]: 
+    def is_terminal_command(text: str) -> Tuple[bool, Optional[str]]:
+        """
+        Проверка является ли текст терминальной командой
+        
+        Args:
+            text: Текст для проверки
+            
+        Returns:
+            Tuple[bool, Optional[str]]: (является командой, команда без префикса)
+        """
         text = text.strip()
         if text.startswith('!'):
             return True, text[1:].strip()
         return False, None
     
-    # Формируем вывод команды в MD
     @staticmethod
-    def format_command_output(output: str, success: bool, return_code: int) -> str: 
+    def format_command_output(output: str, success: bool, return_code: int) -> str:
+        """
+        Форматирование вывода команды в Markdown
+        
+        Args:
+            output: Вывод команды
+            success: Успешность выполнения
+            return_code: Код возврата
+            
+        Returns:
+            str: Отформатированный вывод в Markdown
+        """
         status_text = "Выполнено" if success else f"Завершено с кодом {return_code}"
         
         return (
@@ -114,7 +156,15 @@ class CommandUtils:
         )
     
     def is_file_command(self, command: str) -> bool:
-        """Проверяет, является ли команда файловой"""
+        """
+        Проверка является ли команда файловой
+        
+        Args:
+            command: Команда для проверки
+            
+        Returns:
+            bool: True если команда работает с файловой системой
+        """
         command_parts = command.split()
         if not command_parts:
             return False

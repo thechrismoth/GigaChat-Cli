@@ -1,17 +1,26 @@
 from textual.widgets import Static
 from textual.reactive import reactive
 
-# Виджет автодополнения команд
+
 class CommandList(Static):
+    """Виджет автодополнения команд"""
+    
     can_focus = False 
     
     commands = reactive([])
     selected_index = reactive(0)
-    current_input = ""  # Сохраняем текущий ввод
+    current_input = ""  # Сохранение текущего ввода
     visible_start = 0   # Начало видимой области
-    visible_count = 5   # Сколько команд показывать одновременно
+    visible_count = 5   # Количество команд, показываемых одновременно
     
     def update_commands(self, commands: list[str], current_input: str) -> None:
+        """
+        Обновление списка команд для автодополнения
+        
+        Args:
+            commands: Список команд для отображения
+            current_input: Текущий текст из поля ввода
+        """
         if commands:
             self.commands = commands
             self.current_input = current_input
@@ -24,14 +33,14 @@ class CommandList(Static):
             self.commands = []
     
     def _update_display(self) -> None:
-        """Обновляет отображение списка команд с описаниями"""
+        """Обновление отображения списка команд с описаниями"""
         if not self.commands:
             return
             
-        # Получаем команды с описаниями
+        # Получение команд с описаниями
         commands_with_desc = self.screen.list_utils.get_commands_with_descriptions(self.current_input)
         
-        # Определяем видимый диапазон
+        # Определение видимого диапазона команд
         visible_commands = commands_with_desc[self.visible_start:self.visible_start + self.visible_count]
         
         formatted_commands = []
@@ -39,11 +48,11 @@ class CommandList(Static):
             actual_index = self.visible_start + i
             display_cmd = cmd[1:] if cmd.startswith('/') else cmd
             
-            # Форматируем строку с выравниванием
+            # Форматирование строки с выравниванием
             cmd_part = f"{display_cmd:<8}"
             line = f"{cmd_part} - {description}"
             
-            # Показываем индикатор прокрутки если есть больше команд
+            # Показ индикатора прокрутки если есть больше команд
             if actual_index == self.selected_index:
                 if len(commands_with_desc) > self.visible_count:
                     line = f"➤ {line} [{actual_index + 1}/{len(commands_with_desc)}]"
@@ -57,9 +66,10 @@ class CommandList(Static):
         self.update("\n".join(formatted_commands))
     
     def select_next(self) -> None:
+        """Выбор следующей команды в списке"""
         if self.commands:
             self.selected_index = (self.selected_index + 1) % len(self.commands)
-            # Прокручиваем если вышли за границы видимой области
+            # Прокрутка если вышли за границы видимой области
             if self.selected_index >= self.visible_start + self.visible_count:
                 self.visible_start += 1
             elif self.selected_index < self.visible_start:
@@ -67,9 +77,10 @@ class CommandList(Static):
             self._update_display()
     
     def select_previous(self) -> None:
+        """Выбор предыдущей команды в списке"""
         if self.commands:
             self.selected_index = (self.selected_index - 1) % len(self.commands)
-            # Прокручиваем если вышли за границы видимой области
+            # Прокрутка если вышли за границы видимой области
             if self.selected_index < self.visible_start:
                 self.visible_start -= 1
             elif self.selected_index >= self.visible_start + self.visible_count:
@@ -77,11 +88,23 @@ class CommandList(Static):
             self._update_display()
     
     def get_selected_command(self) -> str:
+        """
+        Получение выбранной команды
+        
+        Returns:
+            str: Выбранная команда или пустая строка
+        """
         if self.commands and 0 <= self.selected_index < len(self.commands):
             return self.commands[self.selected_index]
         return ""
     
     def apply_selection(self, input_field) -> None:
+        """
+        Применение выбранной команды к полю ввода
+        
+        Args:
+            input_field: Поле ввода для обновления
+        """
         selected_cmd = self.get_selected_command()
         if selected_cmd and self.current_input:
             if ' ' in self.current_input:
