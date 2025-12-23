@@ -6,7 +6,7 @@
 
 Текстовый интерфейс для работы с GigaChat AI через командную строку с поддержкой терминальных команд и работы с файлами.
 
-![GigaChat CLI Screenshot](https://gitverse.ru/THEChrismoth/GigaChat-Cli/content/asset/gigachat_menu.jpg)
+![GigaChat CLI Screenshot](https://gitverse.ru/api/repos/THEChrismoth/GigaChat-Cli/raw/branch/asset/gigachat_menu.jpg)
 
 ## Особенности
 
@@ -66,7 +66,7 @@ gigachat
 7. **Анализируйте проект** - просто упомяните файлы в запросе, нейросеть автоматически их найдет
 8. **Выход** - введите `/exit` чтобы закончить работу приложения
 
-![GigaChat CLI Screenshot](https://gitverse.ru/THEChrismoth/GigaChat-Cli/content/asset/gigachat_work.jpg)
+![GigaChat CLI Screenshot](https://gitverse.ru/api/repos/THEChrismoth/GigaChat-Cli/raw/branch/asset/gigachat_work.jpg)
 
 ## Доступные команды
 
