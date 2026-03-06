@@ -3,17 +3,28 @@ from textual.reactive import reactive
 from pathlib import Path
 import os
 
+
 class FileList(Static):
+    """Виджет автодополнения файлов"""
+    
     can_focus = False 
     
     files = reactive([])
     selected_index = reactive(0)
-    current_command = ""  # Сохраняем полную команду
+    current_command = ""  # Сохранение полной команды
     current_path = ""     # Текущий путь для автодополнения
     visible_start = 0     # Начало видимой области
-    visible_count = 5     # Сколько файлов показывать одновременно
+    visible_count = 5     # Количество файлов, показываемых одновременно
     
     def update_files(self, files: list[str], current_command: str, current_path: str) -> None:
+        """
+        Обновление списка файлов для автодополнения
+        
+        Args:
+            files: Список файлов для отображения
+            current_command: Текущая команда из поля ввода
+            current_path: Текущий путь для автодополнения
+        """
         if files:
             self.files = files
             self.current_command = current_command
@@ -27,26 +38,26 @@ class FileList(Static):
             self.files = []
     
     def _update_display(self) -> None:
-        """Обновляет отображение списка файлов"""
+        """Обновление отображения списка файлов"""
         if not self.files:
             return
             
-        # Определяем видимый диапазон
+        # Определение видимого диапазона файлов
         visible_files = self.files[self.visible_start:self.visible_start + self.visible_count]
         
         formatted_files = []
         for i, file_name in enumerate(visible_files):
             actual_index = self.visible_start + i
             
-            # Получаем полный путь для проверки типа
+            # Получение полного пути для проверки типа
             full_path = Path(self.current_path) / file_name
             is_dir = full_path.is_dir()
             
-            # Форматируем отображение
+            # Форматирование отображения с иконками
             icon = "📁" if is_dir else "📄"
             line = f"{icon} {file_name}"
             
-            # Показываем индикатор прокрутки если есть больше файлов
+            # Показ индикатора прокрутки если есть больше файлов
             if actual_index == self.selected_index:
                 if len(self.files) > self.visible_count:
                     line = f"➤ {line} [{actual_index + 1}/{len(self.files)}]"
@@ -60,9 +71,10 @@ class FileList(Static):
         self.update("\n".join(formatted_files))
     
     def select_next(self) -> None:
+        """Выбор следующего файла в списке"""
         if self.files:
             self.selected_index = (self.selected_index + 1) % len(self.files)
-            # Прокручиваем если вышли за границы видимой области
+            # Прокрутка если вышли за границы видимой области
             if self.selected_index >= self.visible_start + self.visible_count:
                 self.visible_start += 1
             elif self.selected_index < self.visible_start:
@@ -70,9 +82,10 @@ class FileList(Static):
             self._update_display()
     
     def select_previous(self) -> None:
+        """Выбор предыдущего файла в списке"""
         if self.files:
             self.selected_index = (self.selected_index - 1) % len(self.files)
-            # Прокручиваем если вышли за границы видимой области
+            # Прокрутка если вышли за границы видимой области
             if self.selected_index < self.visible_start:
                 self.visible_start -= 1
             elif self.selected_index >= self.visible_start + self.visible_count:
@@ -80,21 +93,33 @@ class FileList(Static):
             self._update_display()
     
     def get_selected_file(self) -> str:
+        """
+        Получение выбранного файла
+        
+        Returns:
+            str: Выбранное имя файла или пустая строка
+        """
         if self.files and 0 <= self.selected_index < len(self.files):
             return self.files[self.selected_index]
         return ""
     
     def apply_selection(self, input_field) -> None:
+        """
+        Применение выбранного файла к полю ввода
+        
+        Args:
+            input_field: Поле ввода для обновления
+        """
         selected_file = self.get_selected_file()
         if selected_file and self.current_command:
-            # Разбиваем команду на части
+            # Разбиение команды на части
             parts = self.current_command.strip().split()
             
             if len(parts) < 2:
                 # Если только команда без аргументов, просто добавляем файл
                 new_text = self.current_command + " " + selected_file
             else:
-                # Заменяем последнюю часть
+                # Замена последней части команды
                 base_parts = parts[:-1]  # Все части кроме последней
                 last_part = parts[-1]
                 
@@ -113,7 +138,7 @@ class FileList(Static):
                     # Простая замена
                     new_last_part = selected_file
                 
-                # Собираем новую команду
+                # Сборка новой команды
                 new_text = ' '.join(base_parts) + ' ' + new_last_part
             
             input_field.value = new_text

@@ -1,11 +1,26 @@
 from textual.widgets import Input
 
-# Хендлер обработки команды /file
+
 class HelpHandler:
-    async def handle(self, user_text: str, input_field: Input, screen):
+    """Обработчик команды /help"""
+    
+    async def handle(self, user_text: str, input_field: Input, screen) -> bool:
+        """
+        Обработка команды помощи
+        
+        Args:
+            user_text: Текст сообщения пользователя
+            input_field: Поле ввода для очистки
+            screen: Экран чата для обновления отображения
+            
+        Returns:
+            bool: True если команда обработана, False если нет
+        """
+        # Проверка что это команда /help
         if user_text.strip() != '/help':
             return False
 
+        # Текст справки
         help_text = """
 **Доступные команды:**
 
@@ -21,7 +36,11 @@ class HelpHandler:
 - `Enter` - подтвердить выбор
 - `Esc` - отмена
 """
+        # Очистка экрана и отображение справки
         screen.clear_chat_display()
         screen.update_chat_display(help_text)
+        
+        # Очистка поля ввода
         input_field.value = ""
+        
         return True
