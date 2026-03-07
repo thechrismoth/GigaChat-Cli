@@ -29,10 +29,10 @@ classifiers = [
 gigachat = "gigachat_cli.__main__:main"
 
 [project.urls]
-Homepage = "https://gitverse.ru/THEChrismoth/GigaChat-Cli"
-Repository = "https://gitverse.ru/THEChrismoth/GigaChat-Cli"
-Documentation = "https://gitverse.ru/THEChrismoth/GigaChat-Cli#readme"
-"Issue Tracker" = "https://gitverse.ru/THEChrismoth/GigaChat-Cli/tasktracker"
+Homepage = "https://github.com/THEChrismoth/GigaChat-Cli"
+Repository = "https://github.com/THEChrismoth/GigaChat-Cli"
+Documentation = "https://github.com/THEChrismoth/GigaChat-Cli/blob/master/README.md"
+"Issue Tracker" = "https://github.com/THEChrismoth/GigaChat-Cli/issues"
 
 [build-system]
 requires = ["setuptools>=45", "setuptools-scm[toml]>=6.2"]

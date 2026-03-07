@@ -1,12 +1,12 @@
 # GigaChat CLI
 
 [![PyPI Version](https://img.shields.io/pypi/v/gigachat-cli.svg)](https://pypi.org/project/gigachat-cli/)
-[![PyPI - License](https://img.shields.io/pypi/l/gigachat-cli)](https://gitverse.ru/THEChrismoth/GigaChat-Cli/content/master/LICENSE.md)
+[![PyPI - License](https://img.shields.io/pypi/l/gigachat-cli)](https://github.com/THEChrismoth/GigaChat-Cli/blob/master/LICENSE.md)
 [![Python Version](https://img.shields.io/pypi/pyversions/gigachat-cli)](https://pypi.org/project/gigachat-cli/)
 
 Текстовый интерфейс для работы с GigaChat AI через командную строку с поддержкой терминальных команд и работы с файлами.
 
-![GigaChat CLI Screenshot](https://gitverse.ru/api/repos/THEChrismoth/GigaChat-Cli/raw/branch/asset/gigachat_menu.jpg)
+![GigaChat CLI Screenshot](https://github.com/THEChrismoth/GigaChat-Cli/blob/asset/gigachat_menu.jpg)
 
 ## Особенности
 
@@ -66,7 +66,7 @@ gigachat
 7. **Анализируйте проект** - просто упомяните файлы в запросе, нейросеть автоматически их найдет
 8. **Выход** - введите `/exit` чтобы закончить работу приложения
 
-![GigaChat CLI Screenshot](https://gitverse.ru/api/repos/THEChrismoth/GigaChat-Cli/raw/branch/asset/gigachat_work.jpg)
+![GigaChat CLI Screenshot](https://github.com/THEChrismoth/GigaChat-Cli/blob/asset/gigachat_work.jpg)
 
 ## Доступные команды
 
